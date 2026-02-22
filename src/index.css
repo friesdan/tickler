@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+:root {
+  --glass-bg: rgba(10, 10, 30, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --green: #00ff88;
+  --red: #ff3366;
+  --gold: #ffd700;
+}
+
+body {
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+  color: white;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Glass morphism utility */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+}
