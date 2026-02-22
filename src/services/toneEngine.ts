@@ -96,6 +96,9 @@ export class ToneEngine implements MusicEngine {
 
   // Bass note pool for current chord
   private currentBassNotes: string[] = []
+  // Walking bass state
+  private walkIndex = 0
+  private nextChordRoot = 0 // MIDI note of next chord root for approach tones
 
   // RSI-driven voicing override (sus when extreme)
   private overrideVoicing: 'sus' | null = null
@@ -166,11 +169,21 @@ export class ToneEngine implements MusicEngine {
 
     // --- Pad: PolySynth → reverb ---
     this.reverb = new Tone.Reverb(5).connect(this.masterGain)
-    this.pad = new Tone.PolySynth(Tone.Synth).connect(this.reverb)
-    this.pad.set({
-      oscillator: { type: cfg.synthOverrides.pad.oscillator.type as OscillatorType },
-      envelope: cfg.synthOverrides.pad.envelope as any,
-    })
+    if (cfg.padSynthType === 'fmsynth') {
+      this.pad = new Tone.PolySynth(Tone.FMSynth).connect(this.reverb)
+      ;(this.pad as Tone.PolySynth<Tone.FMSynth>).set({
+        oscillator: { type: cfg.synthOverrides.pad.oscillator.type as OscillatorType },
+        envelope: cfg.synthOverrides.pad.envelope as any,
+        harmonicity: cfg.synthOverrides.pad.harmonicity ?? 3,
+        modulationIndex: cfg.synthOverrides.pad.modulationIndex ?? 10,
+      } as any)
+    } else {
+      this.pad = new Tone.PolySynth(Tone.Synth).connect(this.reverb)
+      this.pad.set({
+        oscillator: { type: cfg.synthOverrides.pad.oscillator.type as OscillatorType },
+        envelope: cfg.synthOverrides.pad.envelope as any,
+      })
+    }
     this.pad.volume.value = cfg.synthOverrides.pad.volume
 
     // Init state
@@ -241,17 +254,33 @@ export class ToneEngine implements MusicEngine {
     // --- Bass ---
     const bassHit = this.bassPattern[step]
     if (bassHit > 0 && this.currentBassNotes.length > 0) {
-      // Mostly root, occasionally a scale tone for movement
       let note: string
-      if (Math.random() < 0.7) {
-        note = this.currentBassNotes[0] // root
+      if (cfg.bassMode === 'walking') {
+        // Walking bass: cycle root → 5th → octave → 5th sequentially
+        // On last bass hit before chord change (step 12+), play chromatic approach tone
+        if (step >= 12 && this.nextChordRoot > 0) {
+          // Chromatic approach: half-step below next root
+          note = midi(this.nextChordRoot - 1)
+        } else {
+          note = this.currentBassNotes[this.walkIndex % this.currentBassNotes.length]
+          this.walkIndex++
+        }
+        // Gentle portamento for walking feel
+        if (this.acidSynth) {
+          this.acidSynth.portamento = 0.04
+        }
       } else {
-        note = this.currentBassNotes[Math.floor(Math.random() * this.currentBassNotes.length)]
-      }
-      // Accent slides: glide to note on some steps
-      const glide = step % 4 !== 0 && Math.random() < 0.3
-      if (this.acidSynth) {
-        this.acidSynth.portamento = glide ? 0.08 : 0
+        // Random mode: mostly root, occasionally a scale tone
+        if (Math.random() < 0.7) {
+          note = this.currentBassNotes[0] // root
+        } else {
+          note = this.currentBassNotes[Math.floor(Math.random() * this.currentBassNotes.length)]
+        }
+        // Accent slides: glide to note on some steps
+        const glide = step % 4 !== 0 && Math.random() < 0.3
+        if (this.acidSynth) {
+          this.acidSynth.portamento = glide ? 0.08 : 0
+        }
       }
       this.acidSynth?.triggerAttackRelease(note, '16n', t, bassHit)
     }
@@ -426,6 +455,14 @@ export class ToneEngine implements MusicEngine {
     // Also add octave of root
     this.currentBassNotes = [midi(rootMidi), midi(fifthMidi), midi(rootMidi + 12)]
 
+    // Reset walk index for walking bass
+    this.walkIndex = 0
+
+    // Compute next chord root for chromatic approach tones
+    const nextIdx = (this.chordIndex + 1) % prog.degrees.length
+    const nextDeg = prog.degrees[nextIdx]
+    this.nextChordRoot = 36 + scale[nextDeg % scale.length]
+
     // Advance chord index
     this.chordIndex = (this.chordIndex + 1) % prog.degrees.length
   }
@@ -539,15 +576,15 @@ export class ToneEngine implements MusicEngine {
       this.overrideVoicing = null
     }
 
-    // Filter cutoff from brightness/RSI — use style config range
+    // Filter cutoff from brightness/RSI — exponential mapping for smooth, musical sweeps
     if (r.rsiToBrightness) {
       this.brightness = params.brightness
       const [minF, maxF] = cfg.filterRange
-      const cutoff = minF + params.brightness * (maxF - minF)
-      this.lowPass?.frequency.rampTo(cutoff, 2)
+      const cutoff = minF * Math.pow(maxF / minF, params.brightness)
+      this.lowPass?.frequency.rampTo(cutoff, 4)
     } else {
-      const mid = (cfg.filterRange[0] + cfg.filterRange[1]) / 2
-      this.lowPass?.frequency.rampTo(mid, 2)
+      const mid = Math.sqrt(cfg.filterRange[0] * cfg.filterRange[1]) // geometric mean
+      this.lowPass?.frequency.rampTo(mid, 4)
     }
 
     // ATR → delay wet + reverb — use style config reverb range

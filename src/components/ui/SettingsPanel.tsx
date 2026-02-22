@@ -5,7 +5,7 @@ import {
   STINGER_LABELS,
   type RoutingKey,
 } from '../../stores/settingsStore'
-import { MUSIC_STYLES, type MusicStyle } from '../../services/styleConfigs'
+import { MUSIC_STYLES, getStyleConfig, type MusicStyle } from '../../services/styleConfigs'
 import type { CandlePatternType } from '../../types'
 
 interface SettingsPanelProps {
@@ -63,19 +63,6 @@ const PRESETS: Record<string, Preset> = {
     },
     style: 'ambient',
   },
-}
-
-// ---------------------------------------------------------------------------
-// Style label map
-// ---------------------------------------------------------------------------
-
-const STYLE_LABELS: Record<MusicStyle, string> = {
-  techno: 'Techno',
-  jazz: 'Jazz',
-  ambient: 'Ambient',
-  lofi: 'Lo-fi',
-  pop: 'Pop',
-  country: 'Country',
 }
 
 // ---------------------------------------------------------------------------
@@ -211,20 +198,27 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
           {/* --- Style --- */}
           <section>
             <h3 className="text-white/60 text-xs uppercase tracking-wider mb-2">Style</h3>
-            <div className="flex gap-2 flex-wrap">
-              {MUSIC_STYLES.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setStyle(s)}
-                  className={`px-3 py-1.5 border rounded-lg text-xs text-white cursor-pointer transition-colors ${
-                    style === s
-                      ? 'bg-white/20 border-white/30'
-                      : 'bg-white/5 hover:bg-white/15 border-white/10'
-                  }`}
-                >
-                  {STYLE_LABELS[s]}
-                </button>
-              ))}
+            <div className="flex flex-col gap-1.5">
+              {MUSIC_STYLES.map((s) => {
+                const cfg = getStyleConfig(s)
+                const active = style === s
+                return (
+                  <button
+                    key={s}
+                    onClick={() => setStyle(s)}
+                    className={`text-left px-3 py-2 border rounded-lg cursor-pointer transition-colors ${
+                      active
+                        ? 'bg-white/15 border-white/30'
+                        : 'bg-white/5 hover:bg-white/10 border-white/10'
+                    }`}
+                  >
+                    <span className={`text-sm font-medium ${active ? 'text-white' : 'text-white/80'}`}>
+                      {cfg.name}
+                    </span>
+                    <span className="block text-xs text-white/40 mt-0.5">{cfg.description}</span>
+                  </button>
+                )
+              })}
             </div>
           </section>
 

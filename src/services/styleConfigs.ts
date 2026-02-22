@@ -17,7 +17,10 @@ export type MusicStyle = 'techno' | 'jazz' | 'ambient' | 'lofi' | 'pop' | 'count
 
 export interface StyleConfig {
   name: string
+  description: string // one-line feel description for UI cards
   swing: number // 0 = straight, 0.55 = jazz swing
+  padSynthType: 'synth' | 'fmsynth' // synth = Tone.Synth, fmsynth = Tone.FMSynth (Rhodes)
+  bassMode: 'random' | 'walking' // random = pick notes randomly, walking = sequential cycle
   kickPatterns: number[][] // 4 patterns by energy level
   hatPatterns: number[][]
   bassPatterns: number[][]
@@ -26,7 +29,7 @@ export interface StyleConfig {
     kick: { pitchDecay?: number; octaves?: number; oscillator?: { type: string }; envelope?: object; volume?: number }
     hats: { envelope?: object; harmonicity?: number; modulationIndex?: number; resonance?: number; octaves?: number; volume?: number }
     bass: { oscillator: { type: string }; envelope: object; filterEnvelope?: object; volume?: number }
-    pad: { oscillator: { type: string }; envelope: object; volume: number }
+    pad: { oscillator: { type: string }; envelope: object; volume: number; harmonicity?: number; modulationIndex?: number }
   }
   filterRange: [number, number] // [min, max] Hz for brightness mapping
   reverbWetRange: [number, number] // [min, max] for ATR mapping
@@ -39,7 +42,10 @@ export interface StyleConfig {
 
 const TECHNO_CONFIG: StyleConfig = {
   name: 'Techno',
+  description: 'Driving, mechanical — 4-on-floor, acid bass, dark pads',
   swing: 0,
+  padSynthType: 'synth',
+  bassMode: 'random',
   kickPatterns: [
     [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
     [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
@@ -110,7 +116,10 @@ const TECHNO_CONFIG: StyleConfig = {
 
 const JAZZ_CONFIG: StyleConfig = {
   name: 'Jazz',
+  description: 'Swung, warm — Rhodes piano, walking bass, ride cymbal',
   swing: 0.55,
+  padSynthType: 'fmsynth',
+  bassMode: 'walking',
   kickPatterns: [
     // Low: beat 1 only
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -185,7 +194,7 @@ const JAZZ_CONFIG: StyleConfig = {
   },
   synthOverrides: {
     kick: { pitchDecay: 0.03, octaves: 6, envelope: { attack: 0.001, decay: 0.25, sustain: 0, release: 0.8 }, volume: -8 },
-    hats: { envelope: { attack: 0.001, decay: 0.08, release: 0.12 }, harmonicity: 3.5, resonance: 5000, octaves: 1, volume: -20 },
+    hats: { envelope: { attack: 0.001, decay: 0.12, release: 0.2 }, harmonicity: 3.5, modulationIndex: 8, resonance: 6000, octaves: 1, volume: -22 },
     bass: {
       oscillator: { type: 'sine' },
       envelope: { attack: 0.01, decay: 0.3, sustain: 0.4, release: 0.2 },
@@ -193,8 +202,10 @@ const JAZZ_CONFIG: StyleConfig = {
     },
     pad: {
       oscillator: { type: 'sine' },
-      envelope: { attack: 0.8, decay: 1.5, sustain: 0.7, release: 2 },
+      envelope: { attack: 0.01, decay: 0.8, sustain: 0.5, release: 1.5 },
       volume: -16,
+      harmonicity: 3.5,
+      modulationIndex: 10,
     },
   },
   filterRange: [800, 3000],
@@ -208,7 +219,10 @@ const JAZZ_CONFIG: StyleConfig = {
 
 const AMBIENT_CONFIG: StyleConfig = {
   name: 'Ambient',
+  description: 'Spacious, minimal — slow drones, sparse shimmer, deep reverb',
   swing: 0,
+  padSynthType: 'synth',
+  bassMode: 'random',
   kickPatterns: [
     // Silent
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -296,7 +310,10 @@ const AMBIENT_CONFIG: StyleConfig = {
 
 const LOFI_CONFIG: StyleConfig = {
   name: 'Lo-fi',
+  description: 'Lazy, warm — dusty beats, muted keys, tape hiss vibes',
   swing: 0.3,
+  padSynthType: 'fmsynth',
+  bassMode: 'random',
   kickPatterns: [
     // Muted boom-bap
     [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
@@ -370,9 +387,11 @@ const LOFI_CONFIG: StyleConfig = {
       volume: -8,
     },
     pad: {
-      oscillator: { type: 'triangle' },
-      envelope: { attack: 1.2, decay: 2, sustain: 0.7, release: 3 },
+      oscillator: { type: 'sine' },
+      envelope: { attack: 0.8, decay: 1.5, sustain: 0.6, release: 2.5 },
       volume: -16,
+      harmonicity: 2.5,
+      modulationIndex: 6,
     },
   },
   filterRange: [400, 2500],
@@ -386,7 +405,10 @@ const LOFI_CONFIG: StyleConfig = {
 
 const POP_CONFIG: StyleConfig = {
   name: 'Pop',
+  description: 'Bright, punchy — crisp drums, saw pads, catchy chords',
   swing: 0,
+  padSynthType: 'synth',
+  bassMode: 'random',
   kickPatterns: [
     // Light four-on-floor
     [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
@@ -477,7 +499,10 @@ const POP_CONFIG: StyleConfig = {
 
 const COUNTRY_CONFIG: StyleConfig = {
   name: 'Country',
+  description: 'Twangy, straight — boom-chick, walking bass, simple chords',
   swing: 0.1,
+  padSynthType: 'synth',
+  bassMode: 'walking',
   kickPatterns: [
     // Boom-chick (beat 1, 3)
     [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],

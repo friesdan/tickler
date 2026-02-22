@@ -20,6 +20,7 @@ uniform float uEnergy;
 uniform float uBass;
 uniform float uRSI;
 uniform float uADX;
+uniform float uMood;
 uniform vec2 uResolution;
 
 varying vec2 vUv;
@@ -104,6 +105,29 @@ void main() {
   color = mix(color, color + coolTint, (1.0 - uRSI) * 0.15);
   color = mix(color, color + warmTint, uRSI * 0.15);
 
+  // Mood color overlay — 5 mood palettes blended at ~35%
+  // 0=neutral, 1=euphoric, 2=calm, 3=tense, 4=dark
+  vec3 moodTint = vec3(0.0);
+  float moodWeight = 0.0;
+  // Euphoric: golden amber warmth
+  float euphoric = smoothstep(0.5, 1.5, uMood) * (1.0 - smoothstep(1.5, 2.5, uMood));
+  moodTint += vec3(0.35, 0.22, 0.05) * euphoric;
+  moodWeight += euphoric;
+  // Calm: deeper blue-purple, softer
+  float calm = smoothstep(1.5, 2.5, uMood) * (1.0 - smoothstep(2.5, 3.5, uMood));
+  moodTint += vec3(0.05, 0.1, 0.3) * calm;
+  moodWeight += calm;
+  // Tense: magenta/red sharpness
+  float tense = smoothstep(2.5, 3.5, uMood) * (1.0 - smoothstep(3.5, 4.5, uMood));
+  moodTint += vec3(0.3, 0.05, 0.15) * tense;
+  moodWeight += tense;
+  // Dark: deep indigo/purple
+  float dark = smoothstep(3.5, 4.5, uMood);
+  moodTint += vec3(0.1, 0.02, 0.25) * dark;
+  moodWeight += dark;
+  // Apply mood tint
+  color = mix(color, color + moodTint, 0.35 * clamp(moodWeight, 0.0, 1.0));
+
   float vig = 1.0 - dot(p * 0.7, p * 0.7);
   color *= smoothstep(0.0, 0.7, vig);
 
@@ -131,6 +155,11 @@ export function BackgroundMesh() {
     mat.uniforms.uVolatility.value += (stock.volatility - mat.uniforms.uVolatility.value) * 0.03
     mat.uniforms.uEnergy.value += (params.energy - mat.uniforms.uEnergy.value) * 0.03
 
+    // Mood as float: neutral=0, euphoric=1, calm=2, tense=3, dark=4
+    const moodMap: Record<string, number> = { neutral: 0, euphoric: 1, calm: 2, tense: 3, dark: 4 }
+    const targetMood = moodMap[params.mood] ?? 0
+    mat.uniforms.uMood.value += (targetMood - mat.uniforms.uMood.value) * 0.03
+
     // RSI and ADX with same smooth lerp
     const rsiNorm = stock.rsi / 100
     const adxNorm = stock.adx / 100
@@ -157,6 +186,7 @@ export function BackgroundMesh() {
           uVolatility: { value: 0.3 },
           uEnergy: { value: 0.3 },
           uBass: { value: 0 },
+          uMood: { value: 0 },
           uRSI: { value: 0.5 },
           uADX: { value: 0.2 },
           uResolution: { value: new THREE.Vector2(800, 600) },

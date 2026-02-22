@@ -6,6 +6,7 @@ import { ParameterDisplay } from './components/ui/ParameterDisplay'
 import { SettingsPanel } from './components/ui/SettingsPanel'
 import { useStockStore } from './stores/stockStore'
 import { useMusicStore } from './stores/musicStore'
+import { useSettingsStore } from './stores/settingsStore'
 import { useAudioAnalyzer } from './hooks/useAudioAnalyzer'
 import { ToneEngine } from './services/toneEngine'
 import { useEffect, useRef, useState, useCallback } from 'react'
@@ -48,6 +49,26 @@ export function App() {
       }
     }
   }, [isPlaying, setIsPlaying])
+
+  // Hot-swap engine when style changes while playing
+  const lastStyleRef = useRef(useSettingsStore.getState().style)
+  useEffect(() => {
+    const unsub = useSettingsStore.subscribe((state) => {
+      const newStyle = state.style
+      if (newStyle === lastStyleRef.current) return
+      lastStyleRef.current = newStyle
+      if (!useMusicStore.getState().isPlaying) return
+      // Stop old engine, start new one with new style
+      engineRef.current?.stop()
+      const engine = new ToneEngine()
+      engineRef.current = engine
+      engine.start().catch((err) => {
+        console.error('Failed to hot-swap engine:', err)
+        useMusicStore.getState().setIsPlaying(false)
+      })
+    })
+    return unsub
+  }, [])
 
   // Feed music parameters to engine
   useEffect(() => {
