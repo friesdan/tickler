@@ -19,6 +19,7 @@ uniform float uSentiment;
 uniform float uVolatility;
 uniform float uEnergy;
 uniform float uMomentum;
+uniform float uMood;
 
 // Encode extra data: color.r = phase, color.g = size, color.b = velocity magnitude
 // normal.xyz = velocity direction
@@ -27,6 +28,7 @@ varying float vAlpha;
 varying float vSentiment;
 varying float vEnergy;
 varying float vPhase;
+varying float vMood;
 
 void main() {
   float phase = color.r;
@@ -64,6 +66,7 @@ void main() {
   vSentiment = uSentiment;
   vEnergy = uEnergy;
   vPhase = phase;
+  vMood = uMood;
 }
 `
 
@@ -72,6 +75,7 @@ varying float vAlpha;
 varying float vSentiment;
 varying float vEnergy;
 varying float vPhase;
+varying float vMood;
 
 void main() {
   vec2 center = gl_PointCoord - 0.5;
@@ -94,6 +98,19 @@ void main() {
   baseColor = mix(baseColor, calmColor, calmMix * 0.5);
 
   baseColor += 0.05 * sin(vPhase * 50.0 + vec3(0.0, 2.09, 4.18));
+
+  // Mood tint (~20% blend): 0=neutral, 1=euphoric, 2=calm, 3=tense, 4=dark
+  vec3 moodTint = vec3(0.0);
+  float mw = 0.0;
+  float me = smoothstep(0.5, 1.5, vMood) * (1.0 - smoothstep(1.5, 2.5, vMood));
+  moodTint += vec3(0.4, 0.28, 0.05) * me; mw += me;
+  float mc = smoothstep(1.5, 2.5, vMood) * (1.0 - smoothstep(2.5, 3.5, vMood));
+  moodTint += vec3(0.1, 0.15, 0.4) * mc; mw += mc;
+  float mt = smoothstep(2.5, 3.5, vMood) * (1.0 - smoothstep(3.5, 4.5, vMood));
+  moodTint += vec3(0.35, 0.08, 0.2) * mt; mw += mt;
+  float md = smoothstep(3.5, 4.5, vMood);
+  moodTint += vec3(0.12, 0.04, 0.3) * md; mw += md;
+  baseColor = mix(baseColor, baseColor + moodTint, 0.2 * clamp(mw, 0.0, 1.0));
 
   float glow = pow(max(1.0 - dist * 2.0, 0.0), 3.0) * 0.5;
   vec3 finalColor = baseColor + glow;
@@ -169,6 +186,11 @@ export function ParticleField() {
     u.uEnergy.value += (params.energy - u.uEnergy.value) * 0.05
     u.uMomentum.value += (stock.momentum - u.uMomentum.value) * 0.05
 
+    // Mood as float: neutral=0, euphoric=1, calm=2, tense=3, dark=4
+    const moodMap: Record<string, number> = { neutral: 0, euphoric: 1, calm: 2, tense: 3, dark: 4 }
+    const targetMood = moodMap[params.mood] ?? 0
+    u.uMood.value += (targetMood - u.uMood.value) * 0.05
+
     if (pointsRef.current) {
       pointsRef.current.rotation.y = t * 0.05
       pointsRef.current.rotation.x = Math.sin(t * 0.03) * 0.1
@@ -200,6 +222,7 @@ export function ParticleField() {
           uVolatility: { value: 0.3 },
           uEnergy: { value: 0.3 },
           uMomentum: { value: 0 },
+          uMood: { value: 0 },
         }}
       />
     </points>
