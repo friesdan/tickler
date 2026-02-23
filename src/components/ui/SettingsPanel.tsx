@@ -19,6 +19,7 @@ interface SettingsPanelProps {
   isOpen: boolean
   onClose: () => void
   onSaveApiKey?: (key: string) => void
+  initialTab?: Tab
 }
 
 // ---------------------------------------------------------------------------
@@ -150,12 +151,73 @@ const PERIOD_GROUPS: { label: string; keys: (keyof IndicatorPeriods)[] }[] = [
 ]
 
 // ---------------------------------------------------------------------------
+// API Key Card — provider description + signup link + input
+// ---------------------------------------------------------------------------
+
+interface ApiKeyCardProps {
+  name: string
+  hasKey: boolean
+  tier: string
+  signupUrl: string
+  signupLabel: string
+  value: string
+  onChange: (val: string) => void
+}
+
+function ApiKeyCard({ name, hasKey, tier, signupUrl, signupLabel, value, onChange }: ApiKeyCardProps) {
+  return (
+    <div className={`rounded-xl border transition-colors ${
+      hasKey
+        ? 'bg-white/[0.04] border-white/[0.08]'
+        : 'bg-white/[0.02] border-white/[0.05]'
+    }`}>
+      <div className="flex items-center justify-between px-3.5 pt-3 pb-2">
+        <div className="flex items-center gap-2">
+          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+            hasKey ? 'bg-emerald-400' : 'bg-white/15'
+          }`} />
+          <span className={`text-[11px] font-semibold ${hasKey ? 'text-white/80' : 'text-white/50'}`}>
+            {name}
+          </span>
+          {hasKey && (
+            <span className="text-[9px] text-emerald-400/60 uppercase tracking-[0.1em]">configured</span>
+          )}
+        </div>
+        <a
+          href={signupUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[9px] text-white/25 hover:text-white/60 underline underline-offset-2 decoration-white/15 hover:decoration-white/40 transition-colors cursor-pointer"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {signupLabel}
+        </a>
+      </div>
+      <p className="px-3.5 pb-2.5 text-[9px] text-white/25 leading-snug">{tier}</p>
+      <div className="px-3.5 pb-3.5">
+        <input
+          type="password"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={hasKey ? 'Key saved \u2014 paste to replace' : 'Paste API key here...'}
+          className={`w-full rounded-lg px-3 py-2 text-white/80 text-[11px] outline-none transition-all placeholder:text-white/15 ${
+            hasKey
+              ? 'bg-white/[0.06] border border-white/[0.12] focus:border-white/25 focus:bg-white/[0.08]'
+              : 'bg-white/[0.04] border border-white/[0.08] focus:border-white/20 focus:bg-white/[0.06]'
+          }`}
+        />
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Main panel
 // ---------------------------------------------------------------------------
 
-export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelProps) {
+export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: SettingsPanelProps) {
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('lyria-api-key') ?? '')
-  const [tab, setTab] = useState<Tab>('sound')
+  const [tab, setTab] = useState<Tab>(initialTab ?? 'sound')
   const {
     routings, stingerAssignments, stingerVolume, style, periods, mixer, customPresets,
     toggleRouting, setStingerAssignment, setStingerVolume, setStyle, setPeriod, resetPeriods,
@@ -163,6 +225,11 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
     dataProvider, finnhubKey, alphaVantageKey, polygonKey,
     setDataProvider, setFinnhubKey, setAlphaVantageKey, setPolygonKey,
   } = useSettingsStore()
+
+  // Sync tab when panel opens with a specific initial tab
+  useEffect(() => {
+    if (isOpen && initialTab) setTab(initialTab)
+  }, [isOpen, initialTab])
 
   // Custom preset save state
   const [isSaving, setIsSaving] = useState(false)
@@ -538,7 +605,35 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
           {tab === 'config' && (
             <div className="space-y-6">
 
-              {/* --- Data Provider --- */}
+              {/* --- Getting Started (shown only when no keys are configured) --- */}
+              {!finnhubKey && !alphaVantageKey && !polygonKey && (
+                <section>
+                  <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl px-4 py-4 space-y-3">
+                    <h3 className="text-white/50 text-[10px] uppercase tracking-[0.15em] font-semibold">
+                      Getting Started
+                    </h3>
+                    <ol className="space-y-2.5">
+                      {[
+                        'Register for a free API key from any provider below.',
+                        'Paste the key into the corresponding field.',
+                        'Select that provider from the Market Data grid.',
+                      ].map((step, i) => (
+                        <li key={i} className="flex gap-3 items-start">
+                          <span className="text-[9px] font-mono text-white/20 bg-white/[0.06] rounded-md w-5 h-5 flex items-center justify-center flex-shrink-0 mt-px">
+                            {i + 1}
+                          </span>
+                          <span className="text-[11px] text-white/45 leading-snug">{step}</span>
+                        </li>
+                      ))}
+                    </ol>
+                    <p className="text-[9px] text-white/20 pt-1">
+                      Keys are stored locally in your browser. Nothing is sent to our servers.
+                    </p>
+                  </div>
+                </section>
+              )}
+
+              {/* --- Data Provider Selector --- */}
               <section>
                 <SectionHeader>Market Data</SectionHeader>
                 <div className="grid grid-cols-2 gap-1.5">
@@ -554,6 +649,11 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
                       p.key === 'finnhub' ? !!finnhubKey :
                       p.key === 'alphaVantage' ? !!alphaVantageKey :
                       p.key === 'polygon' ? !!polygonKey : true
+                    const dotColor = !needsKey ? null
+                      : hasKey && active ? 'bg-emerald-400'
+                      : hasKey ? 'bg-emerald-400/40'
+                      : active ? 'bg-yellow-400 animate-pulse'
+                      : 'bg-white/15'
                     return (
                       <button
                         key={p.key}
@@ -564,11 +664,15 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
                             : 'bg-white/[0.03] hover:bg-white/[0.07]'
                         }`}
                       >
-                        <span className={`text-[11px] font-semibold block ${active ? 'text-white' : 'text-white/60'}`}>
-                          {p.label}
-                          {needsKey && !hasKey && <span className="text-yellow-400/50 ml-1 text-[9px]">no key</span>}
-                        </span>
-                        <span className="text-[9px] text-white/25 leading-tight block mt-0.5">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          {dotColor && (
+                            <span className={`inline-block w-1.5 h-1.5 rounded-full flex-shrink-0 ${dotColor}`} />
+                          )}
+                          <span className={`text-[11px] font-semibold ${active ? 'text-white' : 'text-white/60'}`}>
+                            {p.label}
+                          </span>
+                        </div>
+                        <span className="text-[9px] text-white/25 leading-tight block">
                           {p.desc}
                         </span>
                       </button>
@@ -579,38 +683,35 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
 
               {/* --- Market Data API Keys --- */}
               <section>
-                <SectionHeader>Market Data API Keys</SectionHeader>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-white/30 text-[10px] mb-1.5">Finnhub</label>
-                    <input
-                      type="password"
-                      value={finnhubKey}
-                      onChange={(e) => setFinnhubKey(e.target.value)}
-                      placeholder="API key..."
-                      className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-white/80 text-[11px] outline-none focus:border-white/20 focus:bg-white/[0.06] transition-all placeholder:text-white/15"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-white/30 text-[10px] mb-1.5">Alpha Vantage</label>
-                    <input
-                      type="password"
-                      value={alphaVantageKey}
-                      onChange={(e) => setAlphaVantageKey(e.target.value)}
-                      placeholder="API key..."
-                      className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-white/80 text-[11px] outline-none focus:border-white/20 focus:bg-white/[0.06] transition-all placeholder:text-white/15"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-white/30 text-[10px] mb-1.5">Polygon.io</label>
-                    <input
-                      type="password"
-                      value={polygonKey}
-                      onChange={(e) => setPolygonKey(e.target.value)}
-                      placeholder="API key..."
-                      className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-white/80 text-[11px] outline-none focus:border-white/20 focus:bg-white/[0.06] transition-all placeholder:text-white/15"
-                    />
-                  </div>
+                <SectionHeader>API Keys</SectionHeader>
+                <div className="space-y-2">
+                  <ApiKeyCard
+                    name="Finnhub"
+                    hasKey={!!finnhubKey}
+                    tier="Free: 60 req/min \u00b7 real-time US stocks WebSocket"
+                    signupUrl="https://finnhub.io/register"
+                    signupLabel="finnhub.io/register"
+                    value={finnhubKey}
+                    onChange={setFinnhubKey}
+                  />
+                  <ApiKeyCard
+                    name="Alpha Vantage"
+                    hasKey={!!alphaVantageKey}
+                    tier="Free: 25 req/day \u00b7 broad global coverage"
+                    signupUrl="https://www.alphavantage.co/support/#api-key"
+                    signupLabel="alphavantage.co"
+                    value={alphaVantageKey}
+                    onChange={setAlphaVantageKey}
+                  />
+                  <ApiKeyCard
+                    name="Polygon.io"
+                    hasKey={!!polygonKey}
+                    tier="Free: 5 req/min, 15-min delay \u00b7 paid: real-time WebSocket"
+                    signupUrl="https://polygon.io/dashboard/signup"
+                    signupLabel="polygon.io/signup"
+                    value={polygonKey}
+                    onChange={setPolygonKey}
+                  />
                 </div>
               </section>
 

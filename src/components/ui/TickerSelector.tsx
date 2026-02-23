@@ -14,7 +14,7 @@ function StatusDot({ status }: { status: ConnectionStatus }) {
   return <span className={`inline-block w-1.5 h-1.5 rounded-full ${cls} flex-shrink-0`} />
 }
 
-export function TickerSelector() {
+export function TickerSelector({ onOpenConfig }: { onOpenConfig?: () => void }) {
   const symbol = useStockStore((s) => s.symbol)
   const setSymbol = useStockStore((s) => s.setSymbol)
   const connectionStatus = useStockStore((s) => s.connectionStatus)
@@ -29,6 +29,7 @@ export function TickerSelector() {
   const isSimulator = dataProvider === 'simulator'
   const hasAnyKey = !!(finnhubKey || alphaVantageKey || polygonKey)
 
+  const [bannerDismissed, setBannerDismissed] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<TickerSearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -144,6 +145,36 @@ export function TickerSelector() {
           </div>
         )}
       </div>
+
+      {/* Simulator banner */}
+      {isSimulator && !hasAnyKey && !bannerDismissed && (
+        <div className="flex items-center justify-between gap-2 px-0.5 mb-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="w-1 h-1 rounded-full bg-yellow-400/60 flex-shrink-0" />
+            <span className="text-[10px] text-white/35 leading-tight truncate">
+              Simulated data.{' '}
+              {onOpenConfig ? (
+                <button
+                  onClick={onOpenConfig}
+                  className="text-white/50 hover:text-white/80 underline underline-offset-2 decoration-white/20 hover:decoration-white/50 cursor-pointer transition-colors"
+                >
+                  Add an API key
+                </button>
+              ) : (
+                <span>Add an API key in Settings</span>
+              )}
+              {' '}for live market data.
+            </span>
+          </div>
+          <button
+            onClick={() => setBannerDismissed(true)}
+            className="text-white/15 hover:text-white/40 cursor-pointer transition-colors flex-shrink-0 leading-none text-xs"
+            aria-label="Dismiss"
+          >
+            &times;
+          </button>
+        </div>
+      )}
 
       {/* Favorites bar */}
       <div className="flex gap-1.5 sm:gap-2 flex-nowrap overflow-x-auto sm:flex-wrap">
