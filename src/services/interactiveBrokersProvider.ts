@@ -56,6 +56,7 @@ export class InteractiveBrokersProvider implements IMarketDataProvider {
     try {
       const res = await fetch(`${this.gatewayUrl}/v1/api/iserver/auth/status`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
       })
       if (!this.active) return
@@ -63,9 +64,22 @@ export class InteractiveBrokersProvider implements IMarketDataProvider {
       const data = await res.json()
 
       if (data.authenticated) {
+        // Initialize brokerage session — required before snapshot requests
+        await this.initAccounts()
+        if (!this.active) return
         this.options.onStatusChange('connected', 'IBKR Gateway authenticated')
         this.startPolling()
         this.startTickle()
+      } else if (data.connected) {
+        // Connected but not authenticated — attempt reauthentication
+        console.log('[IBKR] Connected but not authenticated, attempting reauth...')
+        try {
+          await fetch(`${this.gatewayUrl}/v1/api/iserver/reauthenticate`, {
+            method: 'POST',
+            credentials: 'include',
+          })
+        } catch { /* best effort */ }
+        this.options.onStatusChange('error', 'Session expired — reauthenticating. Re-login in browser if this persists.')
       } else {
         this.options.onStatusChange('error', 'Not authenticated — log into the Client Portal Gateway in your browser')
       }
@@ -76,6 +90,17 @@ export class InteractiveBrokersProvider implements IMarketDataProvider {
     }
   }
 
+  /** Call /iserver/accounts to initialize brokerage session (required before market data) */
+  private async initAccounts() {
+    try {
+      await fetch(`${this.gatewayUrl}/v1/api/iserver/accounts`, {
+        credentials: 'include',
+      })
+    } catch (err) {
+      console.warn('[IBKR] Accounts init failed (non-fatal):', err)
+    }
+  }
+
   private async resolveConid(symbol: string): Promise<number | null> {
     const cached = this.conidCache.get(symbol)
     if (cached) return cached
@@ -83,6 +108,7 @@ export class InteractiveBrokersProvider implements IMarketDataProvider {
     try {
       const res = await fetch(`${this.gatewayUrl}/v1/api/iserver/secdef/search`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ symbol }),
       })
@@ -126,6 +152,7 @@ export class InteractiveBrokersProvider implements IMarketDataProvider {
       // fields: 31=last, 84=bid, 86=ask, 55=symbol
       const res = await fetch(
         `${this.gatewayUrl}/v1/api/iserver/marketdata/snapshot?conids=${conid}&fields=31,84,86,55`,
+        { credentials: 'include' },
       )
       if (!this.active || symbol !== this.options.symbol) return
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -165,7 +192,10 @@ export class InteractiveBrokersProvider implements IMarketDataProvider {
     this.tickleTimer = setInterval(async () => {
       if (!this.active) return
       try {
-        await fetch(`${this.gatewayUrl}/v1/api/tickle`, { method: 'POST' })
+        await fetch(`${this.gatewayUrl}/v1/api/tickle`, {
+          method: 'POST',
+          credentials: 'include',
+        })
       } catch {
         // Non-critical — session may expire eventually
       }
@@ -179,6 +209,7 @@ export async function searchIBKR(query: string, gatewayUrl: string): Promise<Tic
     const url = gatewayUrl.replace(/\/+$/, '')
     const res = await fetch(`${url}/v1/api/iserver/secdef/search`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ symbol: query }),
     })
