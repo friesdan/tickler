@@ -19,7 +19,13 @@ export function App() {
   const isPlaying = useMusicStore((s) => s.isPlaying)
   const setIsPlaying = useMusicStore((s) => s.setIsPlaying)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [settingsTab, setSettingsTab] = useState<'sound' | 'routing' | 'config'>('sound')
   const engineRef = useRef<MusicEngine | null>(null)
+
+  const openConfig = () => {
+    setSettingsTab('config')
+    setSettingsOpen(true)
+  }
 
   // Start data provider on mount
   useEffect(() => {
@@ -157,7 +163,7 @@ export function App() {
         </div>
         {/* Top left — ticker + price */}
         <div className="pointer-events-auto absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-col gap-2 sm:gap-3 max-w-[55vw] sm:max-w-none">
-          <TickerSelector />
+          <TickerSelector onOpenConfig={openConfig} />
           <PriceDisplay />
         </div>
 
@@ -189,7 +195,8 @@ export function App() {
 
       <SettingsPanel
         isOpen={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
+        onClose={() => { setSettingsOpen(false); setSettingsTab('sound') }}
+        initialTab={settingsTab}
       />
     </div>
   )
