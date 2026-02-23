@@ -17,6 +17,7 @@ export class AlpacaClient {
   private symbol: string
   private onTick: (tick: StockTick) => void
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null
+  private intentionalClose = false
 
   constructor(apiKey: string, apiSecret: string, symbol: string, onTick: (tick: StockTick) => void) {
     this.apiKey = apiKey
@@ -67,20 +68,20 @@ export class AlpacaClient {
 
     this.ws.onclose = () => {
       console.log('[Alpaca] Disconnected')
-      // Reconnect after 5s
-      this.reconnectTimer = setTimeout(() => this.connect(), 5000)
+      if (!this.intentionalClose) {
+        this.reconnectTimer = setTimeout(() => this.connect(), 5000)
+      }
     }
   }
 
   changeSymbol(symbol: string) {
+    const prev = this.symbol
+    this.symbol = symbol
     if (this.ws?.readyState === WebSocket.OPEN) {
-      // Unsubscribe from old
       this.ws.send(JSON.stringify({
         action: 'unsubscribe',
-        trades: [this.symbol],
+        trades: [prev],
       }))
-      // Subscribe to new
-      this.symbol = symbol
       this.ws.send(JSON.stringify({
         action: 'subscribe',
         trades: [this.symbol],
@@ -89,6 +90,7 @@ export class AlpacaClient {
   }
 
   disconnect() {
+    this.intentionalClose = true
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer)
     }

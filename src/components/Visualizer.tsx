@@ -9,15 +9,18 @@ import { CameraController } from './CameraController'
 import { PostProcessing } from './PostProcessing'
 
 export function Visualizer() {
-  const stock = useStockStore()
+  const price = useStockStore((s) => s.price)
+  const volatility = useStockStore((s) => s.volatility)
+  const momentum = useStockStore((s) => s.momentum)
+  const trend = useStockStore((s) => s.trend)
   const setTarget = useMusicStore((s) => s.setTargetParameters)
   const lerpParams = useMusicStore((s) => s.lerpParameters)
 
   useEffect(() => {
-    if (stock.price > 0) {
-      setTarget(analyzeStock(stock))
+    if (price > 0) {
+      setTarget(analyzeStock(useStockStore.getState()))
     }
-  }, [stock.price, stock.volatility, stock.momentum, stock.trend, setTarget])
+  }, [price, volatility, momentum, trend, setTarget])
 
   useEffect(() => {
     let lastTime = performance.now()
@@ -33,7 +36,6 @@ export function Visualizer() {
     <Canvas
       camera={{ position: [0, 0, 5], fov: 60 }}
       style={{ position: 'absolute', inset: 0 }}
-      gl={{ preserveDrawingBuffer: true }}
       dpr={[1, 2]}
     >
       <color attach="background" args={['#050510']} />

@@ -15,6 +15,7 @@ interface StockStore extends StockState {
   candles: OHLCCandle[]
   lastPattern: DetectedPattern | null
   lastPatternCandleCount: number
+  totalTicks: number  // running counter, never capped — drives candle detection
   processTick: (tick: StockTick) => void
   startSimulator: (symbol: string) => void
   stopSimulator: () => void
@@ -44,10 +45,12 @@ export const useStockStore = create<StockStore>((set, get) => ({
   candles: [],
   lastPattern: null,
   lastPatternCandleCount: 0,
+  totalTicks: 0,
 
   processTick: (tick: StockTick) => {
     const state = get()
     const history = [...state.history, tick.price].slice(-HISTORY_SIZE)
+    const totalTicks = state.totalTicks + 1
     const open = state.open || tick.price
     const high = Math.max(state.high || tick.price, tick.price)
     const low = Math.min(state.low === Infinity ? tick.price : state.low, tick.price)
@@ -67,9 +70,9 @@ export const useStockStore = create<StockStore>((set, get) => ({
     const currentPrice = history[history.length - 1] || 1
     const atr = clamp(mapRange(rawATR / currentPrice, 0.00005, 0.005, 0, 1), 0, 1)
 
-    // Candle pattern detection — only when a new candle completes
-    const prevCandleCount = Math.floor(state.history.length / TICKS_PER_CANDLE)
-    const newCandleCount = Math.floor(history.length / TICKS_PER_CANDLE)
+    // Candle pattern detection — totalTicks drives count (never capped unlike history)
+    const prevCandleCount = Math.floor(state.totalTicks / TICKS_PER_CANDLE)
+    const newCandleCount = Math.floor(totalTicks / TICKS_PER_CANDLE)
     let candles = state.candles
     let lastPattern = state.lastPattern
     let lastPatternCandleCount = state.lastPatternCandleCount
@@ -109,6 +112,7 @@ export const useStockStore = create<StockStore>((set, get) => ({
       candles,
       lastPattern,
       lastPatternCandleCount,
+      totalTicks,
     })
   },
 
@@ -138,6 +142,7 @@ export const useStockStore = create<StockStore>((set, get) => ({
       candles: [],
       lastPattern: null,
       lastPatternCandleCount: 0,
+      totalTicks: 0,
     })
 
     const sim = new StockSimulator(symbol, (tick) => {

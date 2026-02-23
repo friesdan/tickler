@@ -212,7 +212,7 @@ export function ParticleField() {
         depthWrite={false}
         blending={THREE.AdditiveBlending}
         vertexColors
-        uniforms={{
+        uniforms={useMemo(() => ({
           uTime: { value: 0 },
           uBass: { value: 0 },
           uMid: { value: 0 },
@@ -223,7 +223,7 @@ export function ParticleField() {
           uEnergy: { value: 0.3 },
           uMomentum: { value: 0 },
           uMood: { value: 0 },
-        }}
+        }), [])}
       />
     </points>
   )

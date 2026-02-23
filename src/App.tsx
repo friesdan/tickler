@@ -10,16 +10,14 @@ import { useMusicStore } from './stores/musicStore'
 import { useSettingsStore } from './stores/settingsStore'
 import { useAudioAnalyzer } from './hooks/useAudioAnalyzer'
 import { ToneEngine } from './services/toneEngine'
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { MusicEngine } from './types'
 
 export function App() {
   const startSimulator = useStockStore((s) => s.startSimulator)
   const isPlaying = useMusicStore((s) => s.isPlaying)
   const setIsPlaying = useMusicStore((s) => s.setIsPlaying)
-  const parameters = useMusicStore((s) => s.parameters)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('lyria-api-key') ?? '')
   const engineRef = useRef<MusicEngine | null>(null)
 
   // Start stock simulator on mount
@@ -71,10 +69,17 @@ export function App() {
     return unsub
   }, [])
 
-  // Feed music parameters to engine
+  // Feed music parameters to engine — subscribe outside React render cycle
   useEffect(() => {
-    engineRef.current?.updateParameters(parameters)
-  }, [parameters])
+    let prev = useMusicStore.getState().parameters
+    const unsub = useMusicStore.subscribe((state) => {
+      if (state.parameters !== prev) {
+        prev = state.parameters
+        engineRef.current?.updateParameters(state.parameters)
+      }
+    })
+    return unsub
+  }, [])
 
   // Connect audio analyzer
   useAudioAnalyzer(isPlaying ? engineRef.current : null)
@@ -107,10 +112,6 @@ export function App() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
-
-  const handleSaveApiKey = useCallback((key: string) => {
-    setApiKey(key)
   }, [])
 
   return (
@@ -156,7 +157,6 @@ export function App() {
       <SettingsPanel
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}
-        onSaveApiKey={handleSaveApiKey}
       />
     </div>
   )

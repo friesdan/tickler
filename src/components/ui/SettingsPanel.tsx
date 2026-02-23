@@ -17,7 +17,7 @@ import type { CandlePatternType } from '../../types'
 interface SettingsPanelProps {
   isOpen: boolean
   onClose: () => void
-  onSaveApiKey: (key: string) => void
+  onSaveApiKey?: (key: string) => void
 }
 
 // ---------------------------------------------------------------------------
@@ -429,7 +429,7 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
                     <button
                       onClick={() => {
                         localStorage.setItem('lyria-api-key', apiKey)
-                        onSaveApiKey(apiKey)
+                        onSaveApiKey?.(apiKey)
                       }}
                       className="px-3.5 py-2 bg-white/[0.08] hover:bg-white/[0.15] rounded-lg text-[11px] text-white/70 hover:text-white cursor-pointer transition-all"
                     >

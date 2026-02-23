@@ -234,9 +234,5 @@ export function detectPatterns(
   // Only fire the single highest-priority pattern
   const best = patterns.length > 0 ? [patterns[0]] : []
 
-  if (best.length > 0) {
-    console.log(`[CandleDetector] ${best[0].type} (${best[0].sentiment}, strength=${best[0].strength.toFixed(2)}) at candle ${best[0].candleIndex}`)
-  }
-
   return { candles, patterns: best }
 }

@@ -83,7 +83,8 @@ export class StockSimulator {
     const drift = this.regimeMu * dt
     const diffusion = this.regimeSigma * Math.sqrt(dt) * randomNormal()
     this.price = this.price * (1 + drift + diffusion)
-    this.price = Math.max(this.price * 0.5, this.price) // floor at 50% of current
+    const profile = STOCK_PROFILES[this.symbol] ?? { basePrice: 100, mu: 0.0001, sigma: 0.003 }
+    this.price = Math.max(profile.basePrice * 0.1, this.price) // floor at 10% of base price
 
     // Volume with spikes correlated to volatility
     const volumeMultiplier = 1 + Math.abs(diffusion) * 100

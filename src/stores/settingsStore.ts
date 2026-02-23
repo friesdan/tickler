@@ -195,17 +195,20 @@ export const useSettingsStore = create<SettingsState>()(
       toggleStinger: (pattern) =>
         set((s) => ({ stingers: { ...s.stingers, [pattern]: !s.stingers[pattern] } })),
 
-      setStingerVolume: (v) => set({ stingerVolume: v }),
+      setStingerVolume: (v) => set({ stingerVolume: Math.max(0, Math.min(1, v)) }),
 
       setStyle: (style) => set({ style }),
 
-      setPeriod: (key, value) =>
-        set((s) => ({ periods: { ...s.periods, [key]: value } })),
+      setPeriod: (key, value) => {
+        const range = PERIOD_RANGES[key]
+        const clamped = Math.max(range[0], Math.min(range[1], Math.round(value)))
+        set((s) => ({ periods: { ...s.periods, [key]: clamped } }))
+      },
 
       resetPeriods: () => set({ periods: { ...DEFAULT_PERIODS } }),
 
       setMixerVolume: (key, value) =>
-        set((s) => ({ mixer: { ...s.mixer, [key]: value } })),
+        set((s) => ({ mixer: { ...s.mixer, [key]: Math.max(0, Math.min(1, value)) } })),
 
       resetMixer: () => set({ mixer: { ...DEFAULT_MIXER } }),
 

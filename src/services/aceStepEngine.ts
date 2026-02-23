@@ -34,8 +34,10 @@ export class AceStepEngine implements MusicEngine {
       console.log('[AceStepEngine] Server is running')
     } catch {
       console.warn('[AceStepEngine] Server not available at', ACE_STEP_URL)
-      console.warn('[AceStepEngine] Start with: cd ~/Developer/ACE-Step-1.5 && python -m acestep.api_server')
       this.playing = false
+      this.audioContext?.close()
+      this.audioContext = null
+      this.gainNode = null
       throw new Error('ACE-Step server not running. Start it with: cd ~/Developer/ACE-Step-1.5 && python -m acestep.api_server')
     }
 

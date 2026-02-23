@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useMusicStore } from '../../stores/musicStore'
@@ -180,7 +180,7 @@ export function BackgroundMesh() {
         fragmentShader={bgFrag}
         depthTest={false}
         depthWrite={false}
-        uniforms={{
+        uniforms={useMemo(() => ({
           uTime: { value: 0 },
           uSentiment: { value: 0 },
           uVolatility: { value: 0.3 },
@@ -190,7 +190,7 @@ export function BackgroundMesh() {
           uRSI: { value: 0.5 },
           uADX: { value: 0.2 },
           uResolution: { value: new THREE.Vector2(800, 600) },
-        }}
+        }), [])}
       />
     </mesh>
   )

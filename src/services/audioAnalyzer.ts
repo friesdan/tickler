@@ -11,6 +11,8 @@ export class AudioAnalyzer {
   private frequencyData: Uint8Array
   private waveformData: Uint8Array
   private fftSize: number
+  private normalizedFreq: Float32Array
+  private normalizedWave: Float32Array
 
   constructor(audioContext: AudioContext, fftSize = 256) {
     this.audioContext = audioContext
@@ -20,6 +22,8 @@ export class AudioAnalyzer {
     this.analyser.smoothingTimeConstant = 0.8
     this.frequencyData = new Uint8Array(this.analyser.frequencyBinCount)
     this.waveformData = new Uint8Array(fftSize)
+    this.normalizedFreq = new Float32Array(this.analyser.frequencyBinCount)
+    this.normalizedWave = new Float32Array(fftSize)
   }
 
   connectSource(source: AudioNode) {
@@ -35,15 +39,15 @@ export class AudioAnalyzer {
     this.analyser.getByteTimeDomainData(this.waveformData as Uint8Array<ArrayBuffer>)
 
     const binCount = this.analyser.frequencyBinCount
+    const normalizedFreq = this.normalizedFreq
+    const normalizedWave = this.normalizedWave
 
     // Normalize frequency data to 0-1
-    const normalizedFreq = new Float32Array(binCount)
     for (let i = 0; i < binCount; i++) {
       normalizedFreq[i] = this.frequencyData[i] / 255
     }
 
     // Normalize waveform data to -1..1
-    const normalizedWave = new Float32Array(this.fftSize)
     for (let i = 0; i < this.fftSize; i++) {
       normalizedWave[i] = (this.waveformData[i] - 128) / 128
     }

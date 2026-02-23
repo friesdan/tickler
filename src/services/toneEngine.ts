@@ -474,8 +474,6 @@ export class ToneEngine implements MusicEngine {
     // Apply stinger volume
     this.stingerGain.gain.value = settings.stingerVolume
 
-    console.log(`[ToneEngine] Stinger: ${type}`)
-
     switch (type) {
       case 'doji':             this.playDoji(time); break
       case 'hammer':           this.playHammer(time); break
@@ -751,6 +749,12 @@ export class ToneEngine implements MusicEngine {
 
   updateParameters(params: MusicParameters): void {
     if (!this.playing) return
+
+    // Apply volume from music store to master gain
+    const vol = useMusicStore.getState().volume
+    if (this.masterGain) {
+      this.masterGain.gain.rampTo(vol * 0.8, 0.1)
+    }
 
     const stock = useStockStore.getState()
     const r = useSettingsStore.getState().routings

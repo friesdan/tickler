@@ -24,6 +24,8 @@ export class LyriaEngine implements MusicEngine {
   private setupComplete = false
   private reconnectCount = 0
   private maxReconnects = 3
+  private lastPromptSent = 0
+  private promptThrottleMs = 5000
 
   constructor(apiKey: string = '') {
     this.apiKey = apiKey
@@ -32,17 +34,17 @@ export class LyriaEngine implements MusicEngine {
   async start(): Promise<void> {
     if (this.playing) return
 
+    if (!this.apiKey) {
+      console.warn('[LyriaEngine] No API key — set one in Settings')
+      return
+    }
+
     this.audioContext = new AudioContext({ sampleRate: 24000 })
     this.gainNode = this.audioContext.createGain()
     this.gainNode.connect(this.audioContext.destination)
     this.playing = true
     this.modelIndex = 0
     this.reconnectCount = 0
-
-    if (!this.apiKey) {
-      console.warn('[LyriaEngine] No API key — set one in Settings')
-      return
-    }
 
     this.connectWebSocket()
   }
@@ -51,8 +53,6 @@ export class LyriaEngine implements MusicEngine {
     if (!this.apiKey || !this.playing) return
 
     const model = MODEL_CANDIDATES[this.modelIndex]
-    console.log(`[LyriaEngine] Trying model: ${model}`)
-
     const url = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${this.apiKey}`
 
     try {
@@ -60,7 +60,6 @@ export class LyriaEngine implements MusicEngine {
       this.setupComplete = false
 
       this.ws.onopen = () => {
-        console.log('[LyriaEngine] WebSocket connected, sending setup...')
         const setupMsg = {
           setup: {
             model,
@@ -74,13 +73,11 @@ export class LyriaEngine implements MusicEngine {
             }
           }
         }
-        console.log('[LyriaEngine] Setup msg:', JSON.stringify(setupMsg))
         this.ws?.send(JSON.stringify(setupMsg))
 
         // Send initial prompt immediately after setup to prevent idle timeout
         setTimeout(() => {
           if (this.ws?.readyState === WebSocket.OPEN && !this.setupComplete) {
-            console.log('[LyriaEngine] Sending initial prompt without waiting for setupComplete...')
             const prompt = this.currentParams ? buildMusicPrompt(this.currentParams) : 'calm ambient electronic music, 70 BPM, C major, instrumental'
             this.ws.send(JSON.stringify({
               clientContent: {
@@ -105,16 +102,13 @@ export class LyriaEngine implements MusicEngine {
           } else if (event.data instanceof ArrayBuffer) {
             text = new TextDecoder().decode(event.data)
           } else {
-            console.log('[LyriaEngine] Unknown message type:', typeof event.data)
             return
           }
 
           {
             const msg = JSON.parse(text)
-            console.log('[LyriaEngine] Message keys:', Object.keys(msg), 'raw:', text.substring(0, 300))
 
             if (msg.setupComplete) {
-              console.log('[LyriaEngine] Setup complete!')
               this.setupComplete = true
               this.reconnectCount = 0
               if (this.currentParams) {
@@ -208,8 +202,6 @@ export class LyriaEngine implements MusicEngine {
         turnComplete: true
       }
     }))
-
-    console.log('[LyriaEngine] Sent prompt:', prompt)
   }
 
   stop(): void {
@@ -223,7 +215,11 @@ export class LyriaEngine implements MusicEngine {
   updateParameters(params: MusicParameters): void {
     this.currentParams = params
     if (this.setupComplete) {
-      this.sendParameters(params)
+      const now = Date.now()
+      if (now - this.lastPromptSent >= this.promptThrottleMs) {
+        this.lastPromptSent = now
+        this.sendParameters(params)
+      }
     }
   }
 
