@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import {
   useSettingsStore,
   ROUTING_LABELS,
@@ -13,7 +13,7 @@ import {
 } from '../../stores/settingsStore'
 import { MUSIC_STYLES, getStyleConfig, type MusicStyle } from '../../services/styleConfigs'
 import { STINGER_SOUNDS, playStingerPreview, type StingerSoundId, type StingerAssignment } from '../../services/stingerSounds'
-import type { CandlePatternType } from '../../types'
+import type { CandlePatternType, DataProvider } from '../../types'
 
 interface SettingsPanelProps {
   isOpen: boolean
@@ -157,10 +157,16 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('lyria-api-key') ?? '')
   const [tab, setTab] = useState<Tab>('sound')
   const {
-    routings, stingerAssignments, stingerVolume, style, periods, mixer,
+    routings, stingerAssignments, stingerVolume, style, periods, mixer, customPresets,
     toggleRouting, setStingerAssignment, setStingerVolume, setStyle, setPeriod, resetPeriods,
-    setMixerVolume, resetMixer, resetDefaults,
+    setMixerVolume, resetMixer, resetDefaults, savePreset, loadPreset, deletePreset,
+    dataProvider, finnhubKey, alphaVantageKey, polygonKey,
+    setDataProvider, setFinnhubKey, setAlphaVantageKey, setPolygonKey,
   } = useSettingsStore()
+
+  // Custom preset save state
+  const [isSaving, setIsSaving] = useState(false)
+  const [presetName, setPresetName] = useState('')
 
   // Soundboard preview state
   const [playingId, setPlayingId] = useState<StingerSoundId | null>(null)
@@ -172,6 +178,11 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
     playStingerPreview(id, stingerVolume)
     playingTimeout.current = setTimeout(() => setPlayingId(null), 1500)
   }, [stingerVolume])
+
+  // Clean up preview timeout on unmount
+  useEffect(() => {
+    return () => { if (playingTimeout.current) clearTimeout(playingTimeout.current) }
+  }, [])
 
   if (!isOpen) return null
 
@@ -246,7 +257,7 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
               {/* --- Presets --- */}
               <section>
                 <SectionHeader>Presets</SectionHeader>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {Object.entries(PRESETS).map(([key, preset]) => (
                     <button
                       key={key}
@@ -259,6 +270,68 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
                       </span>
                     </button>
                   ))}
+                  {customPresets.map((p) => (
+                    <div key={p.name} className="group relative flex items-center">
+                      <button
+                        onClick={() => loadPreset(p.name)}
+                        className="px-3.5 py-2 pr-7 bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.06] hover:border-white/[0.12] rounded-lg cursor-pointer transition-all"
+                        title={`Custom: ${p.style}`}
+                      >
+                        <span className="text-[11px] font-medium text-white/60 group-hover:text-white/90 transition-colors">
+                          {p.name}
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => deletePreset(p.name)}
+                        className="absolute right-1.5 w-4 h-4 flex items-center justify-center rounded-full text-white/20 hover:text-white/70 hover:bg-white/10 cursor-pointer transition-all text-[10px] leading-none"
+                        aria-label={`Delete preset ${p.name}`}
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
+                  {isSaving ? (
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        autoFocus
+                        value={presetName}
+                        onChange={(e) => setPresetName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && presetName.trim()) {
+                            savePreset(presetName.trim())
+                            setPresetName('')
+                            setIsSaving(false)
+                          } else if (e.key === 'Escape') {
+                            setPresetName('')
+                            setIsSaving(false)
+                          }
+                        }}
+                        placeholder="Name..."
+                        className="w-24 bg-white/[0.06] border border-white/[0.12] rounded-md px-2 py-1.5 text-[11px] text-white/80 outline-none focus:border-white/25 placeholder:text-white/20"
+                      />
+                      <button
+                        onClick={() => {
+                          if (presetName.trim()) {
+                            savePreset(presetName.trim())
+                            setPresetName('')
+                            setIsSaving(false)
+                          }
+                        }}
+                        className="px-2 py-1.5 bg-white/[0.08] hover:bg-white/[0.15] rounded-md text-[10px] text-white/60 hover:text-white cursor-pointer transition-all"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setIsSaving(true)}
+                      className="group px-3 py-2 bg-white/[0.02] hover:bg-white/[0.08] border border-dashed border-white/[0.08] hover:border-white/[0.15] rounded-lg cursor-pointer transition-all"
+                    >
+                      <span className="text-[11px] font-medium text-white/30 group-hover:text-white/70 transition-colors">
+                        + Save
+                      </span>
+                    </button>
+                  )}
                 </div>
               </section>
 
@@ -464,8 +537,86 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
           {/* ============================================================= */}
           {tab === 'config' && (
             <div className="space-y-6">
+
+              {/* --- Data Provider --- */}
               <section>
-                <SectionHeader>API Keys</SectionHeader>
+                <SectionHeader>Market Data</SectionHeader>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {([
+                    { key: 'simulator', label: 'Simulator', desc: 'GBM synthetic data' },
+                    { key: 'finnhub', label: 'Finnhub', desc: 'Real-time WebSocket' },
+                    { key: 'alphaVantage', label: 'Alpha Vantage', desc: 'REST polling (8s)' },
+                    { key: 'polygon', label: 'Polygon.io', desc: 'WebSocket + REST' },
+                  ] as const).map((p) => {
+                    const active = dataProvider === p.key
+                    const needsKey = p.key !== 'simulator'
+                    const hasKey =
+                      p.key === 'finnhub' ? !!finnhubKey :
+                      p.key === 'alphaVantage' ? !!alphaVantageKey :
+                      p.key === 'polygon' ? !!polygonKey : true
+                    return (
+                      <button
+                        key={p.key}
+                        onClick={() => setDataProvider(p.key)}
+                        className={`text-left px-3 py-2.5 rounded-lg cursor-pointer transition-all ${
+                          active
+                            ? 'bg-white/[0.12] ring-1 ring-white/20'
+                            : 'bg-white/[0.03] hover:bg-white/[0.07]'
+                        }`}
+                      >
+                        <span className={`text-[11px] font-semibold block ${active ? 'text-white' : 'text-white/60'}`}>
+                          {p.label}
+                          {needsKey && !hasKey && <span className="text-yellow-400/50 ml-1 text-[9px]">no key</span>}
+                        </span>
+                        <span className="text-[9px] text-white/25 leading-tight block mt-0.5">
+                          {p.desc}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+
+              {/* --- Market Data API Keys --- */}
+              <section>
+                <SectionHeader>Market Data API Keys</SectionHeader>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-white/30 text-[10px] mb-1.5">Finnhub</label>
+                    <input
+                      type="password"
+                      value={finnhubKey}
+                      onChange={(e) => setFinnhubKey(e.target.value)}
+                      placeholder="API key..."
+                      className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-white/80 text-[11px] outline-none focus:border-white/20 focus:bg-white/[0.06] transition-all placeholder:text-white/15"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white/30 text-[10px] mb-1.5">Alpha Vantage</label>
+                    <input
+                      type="password"
+                      value={alphaVantageKey}
+                      onChange={(e) => setAlphaVantageKey(e.target.value)}
+                      placeholder="API key..."
+                      className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-white/80 text-[11px] outline-none focus:border-white/20 focus:bg-white/[0.06] transition-all placeholder:text-white/15"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white/30 text-[10px] mb-1.5">Polygon.io</label>
+                    <input
+                      type="password"
+                      value={polygonKey}
+                      onChange={(e) => setPolygonKey(e.target.value)}
+                      placeholder="API key..."
+                      className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-white/80 text-[11px] outline-none focus:border-white/20 focus:bg-white/[0.06] transition-all placeholder:text-white/15"
+                    />
+                  </div>
+                </div>
+              </section>
+
+              {/* --- Music API Key (Lyria) --- */}
+              <section>
+                <SectionHeader>Music API Key</SectionHeader>
                 <div>
                   <label className="block text-white/30 text-[10px] mb-1.5">
                     Google AI API Key (Lyria RealTime)

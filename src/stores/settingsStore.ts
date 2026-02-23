@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { CandlePatternType } from '../types'
+import type { CandlePatternType, DataProvider } from '../types'
 import type { MusicStyle } from '../services/styleConfigs'
 import type { StingerAssignment } from '../services/stingerSounds'
 
@@ -132,6 +132,20 @@ export const MIXER_LABELS: Record<keyof MixerVolumes, string> = {
 }
 
 // ---------------------------------------------------------------------------
+// Custom presets
+// ---------------------------------------------------------------------------
+
+export interface CustomPreset {
+  name: string
+  routings: SignalRoutings
+  style: MusicStyle
+  periods: IndicatorPeriods
+  mixer: MixerVolumes
+  stingerAssignments: Record<CandlePatternType, StingerAssignment>
+  stingerVolume: number
+}
+
+// ---------------------------------------------------------------------------
 // Store
 // ---------------------------------------------------------------------------
 
@@ -142,6 +156,14 @@ interface SettingsState {
   style: MusicStyle
   periods: IndicatorPeriods
   mixer: MixerVolumes
+  customPresets: CustomPreset[]
+
+  // Market data provider
+  dataProvider: DataProvider
+  finnhubKey: string
+  alphaVantageKey: string
+  polygonKey: string
+  favoriteTickers: string[]
 
   toggleRouting: (key: RoutingKey) => void
   setStingerAssignment: (pattern: CandlePatternType, sound: StingerAssignment) => void
@@ -152,6 +174,15 @@ interface SettingsState {
   setMixerVolume: (key: keyof MixerVolumes, value: number) => void
   resetMixer: () => void
   resetDefaults: () => void
+  savePreset: (name: string) => void
+  loadPreset: (name: string) => void
+  deletePreset: (name: string) => void
+  setDataProvider: (provider: DataProvider) => void
+  setFinnhubKey: (key: string) => void
+  setAlphaVantageKey: (key: string) => void
+  setPolygonKey: (key: string) => void
+  addFavorite: (symbol: string) => void
+  removeFavorite: (symbol: string) => void
 }
 
 const DEFAULT_ROUTINGS: SignalRoutings = {
@@ -200,6 +231,13 @@ export const useSettingsStore = create<SettingsState>()(
       style: DEFAULT_STYLE,
       periods: { ...DEFAULT_PERIODS },
       mixer: { ...DEFAULT_MIXER },
+      customPresets: [],
+
+      dataProvider: 'simulator' as DataProvider,
+      finnhubKey: '',
+      alphaVantageKey: '',
+      polygonKey: '',
+      favoriteTickers: ['AAPL', 'TSLA', 'NVDA', 'SPY', 'QQQ'],
 
       toggleRouting: (key) =>
         set((s) => ({ routings: { ...s.routings, [key]: !s.routings[key] } })),
@@ -224,19 +262,76 @@ export const useSettingsStore = create<SettingsState>()(
 
       resetMixer: () => set({ mixer: { ...DEFAULT_MIXER } }),
 
+      setDataProvider: (provider) => set({ dataProvider: provider }),
+      setFinnhubKey: (key) => set({ finnhubKey: key }),
+      setAlphaVantageKey: (key) => set({ alphaVantageKey: key }),
+      setPolygonKey: (key) => set({ polygonKey: key }),
+      addFavorite: (symbol) =>
+        set((s) => {
+          if (s.favoriteTickers.includes(symbol)) return {}
+          return { favoriteTickers: [...s.favoriteTickers, symbol] }
+        }),
+      removeFavorite: (symbol) =>
+        set((s) => ({
+          favoriteTickers: s.favoriteTickers.filter((t) => t !== symbol),
+        })),
+
       resetDefaults: () =>
-        set({
+        set((s) => ({
           routings: { ...DEFAULT_ROUTINGS },
           stingerAssignments: { ...DEFAULT_STINGER_ASSIGNMENTS },
           stingerVolume: DEFAULT_STINGER_VOLUME,
           style: DEFAULT_STYLE,
           periods: { ...DEFAULT_PERIODS },
           mixer: { ...DEFAULT_MIXER },
+          dataProvider: 'simulator' as DataProvider,
+          favoriteTickers: ['AAPL', 'TSLA', 'NVDA', 'SPY', 'QQQ'],
+          // Preserve API keys: finnhubKey, alphaVantageKey, polygonKey
+        })),
+
+      savePreset: (name) =>
+        set((s) => {
+          const preset: CustomPreset = {
+            name,
+            routings: { ...s.routings },
+            style: s.style,
+            periods: { ...s.periods },
+            mixer: { ...s.mixer },
+            stingerAssignments: { ...s.stingerAssignments },
+            stingerVolume: s.stingerVolume,
+          }
+          const existing = s.customPresets.findIndex((p) => p.name === name)
+          const updated = [...s.customPresets]
+          if (existing >= 0) {
+            updated[existing] = preset
+          } else {
+            updated.push(preset)
+          }
+          return { customPresets: updated }
         }),
+
+      loadPreset: (name) =>
+        set((s) => {
+          const preset = s.customPresets.find((p) => p.name === name)
+          if (!preset) return {}
+          return {
+            routings: { ...preset.routings },
+            style: preset.style,
+            periods: { ...preset.periods },
+            mixer: { ...preset.mixer },
+            stingerAssignments: { ...preset.stingerAssignments },
+            stingerVolume: preset.stingerVolume,
+          }
+        }),
+
+      deletePreset: (name) =>
+        set((s) => ({
+          customPresets: s.customPresets.filter((p) => p.name !== name),
+        })),
     }),
     {
       name: 'music-ticker-settings',
-      version: 2,
+      version: 3,
       migrate: (persisted: unknown, version: number) => {
         const state = persisted as Record<string, unknown>
         if (version < 2) {
@@ -250,7 +345,15 @@ export const useSettingsStore = create<SettingsState>()(
                 : 'off'
             }
           }
-          return { ...state, stingerAssignments: assignments, stingers: undefined }
+          Object.assign(state, { stingerAssignments: assignments, stingers: undefined })
+        }
+        if (version < 3) {
+          // v2 → v3: add market data provider fields
+          if (!state.dataProvider) state.dataProvider = 'simulator'
+          if (!state.finnhubKey) state.finnhubKey = ''
+          if (!state.alphaVantageKey) state.alphaVantageKey = ''
+          if (!state.polygonKey) state.polygonKey = ''
+          if (!state.favoriteTickers) state.favoriteTickers = ['AAPL', 'TSLA', 'NVDA', 'SPY', 'QQQ']
         }
         return state
       },
