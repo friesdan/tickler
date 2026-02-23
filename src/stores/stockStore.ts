@@ -1,6 +1,10 @@
 import { create } from 'zustand'
-import type { StockState, StockTick, OHLCCandle, DetectedPattern } from '../types'
-import { StockSimulator } from '../services/stockSimulator'
+import type { StockState, StockTick, OHLCCandle, DetectedPattern, ConnectionStatus } from '../types'
+import type { IMarketDataProvider } from '../services/marketDataProvider'
+import { SimulatorProvider } from '../services/simulatorProvider'
+import { FinnhubProvider } from '../services/finnhubProvider'
+import { AlphaVantageProvider } from '../services/alphaVantageProvider'
+import { PolygonProvider } from '../services/polygonProvider'
 import {
   computeVolatility, computeMomentum, detectTrend,
   computeRSI, computeMACD, computeADX, computeATR, computeEMACrossover,
@@ -11,19 +15,20 @@ import { clamp, mapRange } from '../utils/math'
 import { detectPatterns, TICKS_PER_CANDLE } from '../services/candleDetector'
 
 interface StockStore extends StockState {
-  simulator: StockSimulator | null
+  provider: IMarketDataProvider | null
+  connectionStatus: ConnectionStatus
+  connectionMessage: string | null
   candles: OHLCCandle[]
   lastPattern: DetectedPattern | null
   lastPatternCandleCount: number
   totalTicks: number  // running counter, never capped — drives candle detection
   processTick: (tick: StockTick) => void
-  startSimulator: (symbol: string) => void
-  stopSimulator: () => void
+  startProvider: (symbol: string) => void
+  stopProvider: () => void
   setSymbol: (symbol: string) => void
 }
 
-export const useStockStore = create<StockStore>((set, get) => ({
-  symbol: 'AAPL',
+const INITIAL_STATE = {
   price: 0,
   previousPrice: 0,
   open: 0,
@@ -32,20 +37,54 @@ export const useStockStore = create<StockStore>((set, get) => ({
   change: 0,
   changePercent: 0,
   volume: 0,
-  history: [],
+  history: [] as number[],
   volatility: 0.3,
   momentum: 0,
-  trend: 'neutral',
+  trend: 'neutral' as const,
   rsi: 50,
   macdHistogram: 0,
   adx: 20,
   atr: 0.3,
   macroTrend: 0,
-  simulator: null,
-  candles: [],
-  lastPattern: null,
+  candles: [] as OHLCCandle[],
+  lastPattern: null as DetectedPattern | null,
   lastPatternCandleCount: 0,
   totalTicks: 0,
+}
+
+function createProvider(symbol: string, onTick: (tick: StockTick) => void, onStatusChange: (status: ConnectionStatus, message?: string) => void): IMarketDataProvider {
+  const settings = useSettingsStore.getState()
+  const dp = settings.dataProvider
+  const opts = { symbol, onTick, onStatusChange }
+
+  switch (dp) {
+    case 'finnhub':
+      if (settings.finnhubKey) {
+        return new FinnhubProvider({ ...opts, apiKey: settings.finnhubKey })
+      }
+      // Fall back to simulator if no key
+      return new SimulatorProvider(opts)
+    case 'alphaVantage':
+      if (settings.alphaVantageKey) {
+        return new AlphaVantageProvider({ ...opts, apiKey: settings.alphaVantageKey })
+      }
+      return new SimulatorProvider(opts)
+    case 'polygon':
+      if (settings.polygonKey) {
+        return new PolygonProvider({ ...opts, apiKey: settings.polygonKey })
+      }
+      return new SimulatorProvider(opts)
+    default:
+      return new SimulatorProvider(opts)
+  }
+}
+
+export const useStockStore = create<StockStore>((set, get) => ({
+  symbol: 'AAPL',
+  ...INITIAL_STATE,
+  provider: null,
+  connectionStatus: 'disconnected',
+  connectionMessage: null,
 
   processTick: (tick: StockTick) => {
     const state = get()
@@ -66,7 +105,6 @@ export const useStockStore = create<StockStore>((set, get) => ({
     const macroTrend = computeEMACrossover(history, p.emaShort, p.emaLong)
 
     // Normalize ATR: relative to price, mapped to 0-1
-    // Typical per-tick ATR ranges ~0.001%-0.5% of price
     const currentPrice = history[history.length - 1] || 1
     const atr = clamp(mapRange(rawATR / currentPrice, 0.00005, 0.005, 0, 1), 0, 1)
 
@@ -116,49 +154,43 @@ export const useStockStore = create<StockStore>((set, get) => ({
     })
   },
 
-  startSimulator: (symbol: string) => {
+  startProvider: (symbol: string) => {
     const state = get()
-    state.simulator?.stop()
+    state.provider?.disconnect()
 
     set({
       symbol,
-      price: 0,
-      previousPrice: 0,
-      open: 0,
-      high: 0,
-      low: Infinity,
-      change: 0,
-      changePercent: 0,
-      volume: 0,
-      history: [],
-      volatility: 0.3,
-      momentum: 0,
-      trend: 'neutral',
-      rsi: 50,
-      macdHistogram: 0,
-      adx: 20,
-      atr: 0.3,
-      macroTrend: 0,
-      candles: [],
-      lastPattern: null,
-      lastPatternCandleCount: 0,
-      totalTicks: 0,
+      ...INITIAL_STATE,
+      provider: null,
+      connectionStatus: 'connecting',
+      connectionMessage: null,
     })
 
-    const sim = new StockSimulator(symbol, (tick) => {
-      get().processTick(tick)
-    })
-    sim.start(100)
-    set({ simulator: sim })
+    const provider = createProvider(
+      symbol,
+      (tick) => get().processTick(tick),
+      (status, message) => set({ connectionStatus: status, connectionMessage: message ?? null }),
+    )
+    provider.connect()
+    set({ provider })
   },
 
-  stopSimulator: () => {
-    get().simulator?.stop()
-    set({ simulator: null })
+  stopProvider: () => {
+    get().provider?.disconnect()
+    set({ provider: null, connectionStatus: 'disconnected', connectionMessage: null })
   },
 
   setSymbol: (symbol: string) => {
-    get().stopSimulator()
-    get().startSimulator(symbol)
+    const state = get()
+    if (state.provider) {
+      // Reset state for new symbol
+      set({
+        symbol,
+        ...INITIAL_STATE,
+      })
+      state.provider.changeSymbol(symbol)
+    } else {
+      get().startProvider(symbol)
+    }
   },
 }))

@@ -15,17 +15,47 @@ import { useEffect, useRef, useState } from 'react'
 import type { MusicEngine } from './types'
 
 export function App() {
-  const startSimulator = useStockStore((s) => s.startSimulator)
+  const startProvider = useStockStore((s) => s.startProvider)
   const isPlaying = useMusicStore((s) => s.isPlaying)
   const setIsPlaying = useMusicStore((s) => s.setIsPlaying)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const engineRef = useRef<MusicEngine | null>(null)
 
-  // Start stock simulator on mount
+  // Start data provider on mount
   useEffect(() => {
-    startSimulator('AAPL')
-    return () => useStockStore.getState().stopSimulator()
-  }, [startSimulator])
+    startProvider('AAPL')
+    return () => useStockStore.getState().stopProvider()
+  }, [startProvider])
+
+  // Reconnect provider when dataProvider changes instantly, or API keys change (debounced)
+  useEffect(() => {
+    let keyDebounce: ReturnType<typeof setTimeout> | null = null
+    const unsub = useSettingsStore.subscribe((state, prev) => {
+      // Provider switch: reconnect immediately
+      if (state.dataProvider !== prev.dataProvider) {
+        if (keyDebounce) clearTimeout(keyDebounce)
+        const symbol = useStockStore.getState().symbol
+        useStockStore.getState().startProvider(symbol)
+        return
+      }
+      // API key change: debounce 800ms (user is typing)
+      if (
+        state.finnhubKey !== prev.finnhubKey ||
+        state.alphaVantageKey !== prev.alphaVantageKey ||
+        state.polygonKey !== prev.polygonKey
+      ) {
+        if (keyDebounce) clearTimeout(keyDebounce)
+        keyDebounce = setTimeout(() => {
+          const symbol = useStockStore.getState().symbol
+          useStockStore.getState().startProvider(symbol)
+        }, 800)
+      }
+    })
+    return () => {
+      unsub()
+      if (keyDebounce) clearTimeout(keyDebounce)
+    }
+  }, [])
 
   // Create/destroy music engine when playing state changes
   useEffect(() => {
@@ -143,9 +173,7 @@ export function App() {
               <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
             </svg>
           </button>
-          <div className="hidden md:block">
-            <ParameterDisplay />
-          </div>
+          <ParameterDisplay />
         </div>
 
         {/* Bottom left — chord display (hidden on very small screens when controls overlap) */}

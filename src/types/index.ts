@@ -84,6 +84,21 @@ export interface DetectedPattern {
   candleIndex: number
 }
 
+// ---------------------------------------------------------------------------
+// Market data providers
+// ---------------------------------------------------------------------------
+
+export type DataProvider = 'simulator' | 'finnhub' | 'alphaVantage' | 'polygon'
+
+export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error' | 'reconnecting'
+
+export interface TickerSearchResult {
+  symbol: string
+  name: string
+  type: string
+  provider: DataProvider
+}
+
 export interface VisualizerUniforms {
   uTime: number
   uBass: number
