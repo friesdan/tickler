@@ -145,14 +145,15 @@ const JAZZ_CONFIG: StyleConfig = {
     [0.5, 0, 0, 0, 0.4, 0, 0, 0, 0.5, 0, 0, 0, 0.4, 0, 0, 0.3],
   ],
   hatPatterns: [
-    // Low: ride quarters, beats 2&4 accented
-    [0.5, 0, 0, 0, 0.8, 0, 0, 0, 0.5, 0, 0, 0, 0.8, 0, 0, 0],
-    // Medium: spang-a-lang — "ding DING-da ding-da DING" (skip notes only on &2 and &3)
-    [0.6, 0, 0, 0, 0.9, 0, 0.4, 0, 0.6, 0, 0.4, 0, 0.9, 0, 0, 0],
-    // High: stronger spang-a-lang, light tap before beat 4
-    [0.7, 0, 0, 0, 1, 0, 0.5, 0, 0.7, 0, 0.5, 0, 1, 0, 0.3, 0],
-    // Hot: bebop ride — ghost notes between + ride bell on &4
-    [0.7, 0, 0.15, 0, 1, 0, 0.5, 0.15, 0.7, 0.15, 0.5, 0, 1, 0, 1.4, 0.2],
+    // Low: ride quarters only
+    [0.5, 0, 0, 0, 0.7, 0, 0, 0, 0.5, 0, 0, 0, 0.7, 0, 0, 0],
+    // Medium: spang-a-lang — "ding, ding-ga, ding, ding-ga"
+    // beat1(quarter) beat2+&2(swung 8ths) beat3(quarter) beat4+&4(swung 8ths)
+    [0.6, 0, 0, 0, 0.9, 0, 0.4, 0, 0.6, 0, 0, 0, 0.9, 0, 0.4, 0],
+    // High: stronger spang-a-lang with accented downbeats
+    [0.7, 0, 0, 0, 1, 0, 0.5, 0, 0.7, 0, 0, 0, 1, 0, 0.5, 0],
+    // Hot: bebop ride — spang-a-lang + ghost notes + ride bell on &4
+    [0.7, 0, 0, 0, 1, 0, 0.5, 0.15, 0.7, 0, 0, 0, 1, 0, 1.4, 0.2],
   ],
   snarePatterns: [
     // Very sparse — no brush
