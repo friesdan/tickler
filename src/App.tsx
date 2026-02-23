@@ -121,8 +121,8 @@ export function App() {
 
       {/* UI Overlay */}
       <div className="absolute inset-0 pointer-events-none safe-top safe-bottom safe-left safe-right">
-        {/* Center — price chart (desktop only) */}
-        <div className="pointer-events-none absolute inset-0 hidden sm:flex items-center justify-center">
+        {/* Center — price chart */}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <PriceChart />
         </div>
         {/* Top left — ticker + price */}

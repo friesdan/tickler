@@ -126,7 +126,7 @@ export function PriceChart() {
   return (
     <div
       ref={containerRef}
-      className="w-[60vw] h-[35vh] opacity-50"
+      className="w-[90vw] h-[25vh] sm:w-[60vw] sm:h-[35vh] opacity-50"
     />
   )
 }
