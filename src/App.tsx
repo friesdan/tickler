@@ -48,7 +48,8 @@ export function App() {
       if (
         state.finnhubKey !== prev.finnhubKey ||
         state.alphaVantageKey !== prev.alphaVantageKey ||
-        state.polygonKey !== prev.polygonKey
+        state.polygonKey !== prev.polygonKey ||
+        state.ibkrGatewayUrl !== prev.ibkrGatewayUrl
       ) {
         if (keyDebounce) clearTimeout(keyDebounce)
         keyDebounce = setTimeout(() => {

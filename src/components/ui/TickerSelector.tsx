@@ -25,9 +25,10 @@ export function TickerSelector({ onOpenConfig }: { onOpenConfig?: () => void }) 
   const finnhubKey = useSettingsStore((s) => s.finnhubKey)
   const alphaVantageKey = useSettingsStore((s) => s.alphaVantageKey)
   const polygonKey = useSettingsStore((s) => s.polygonKey)
+  const ibkrGatewayUrl = useSettingsStore((s) => s.ibkrGatewayUrl)
 
   const isSimulator = dataProvider === 'simulator'
-  const hasAnyKey = !!(finnhubKey || alphaVantageKey || polygonKey)
+  const hasAnyKey = !!(finnhubKey || alphaVantageKey || polygonKey || ibkrGatewayUrl)
 
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -53,11 +54,11 @@ export function TickerSelector({ onOpenConfig }: { onOpenConfig?: () => void }) 
     }
     setIsSearching(true)
     debounceRef.current = setTimeout(async () => {
-      const results = await searchTickers(query, { finnhubKey, alphaVantageKey, polygonKey })
+      const results = await searchTickers(query, { finnhubKey, alphaVantageKey, polygonKey, ibkrGatewayUrl })
       setSearchResults(results)
       setIsSearching(false)
     }, 300)
-  }, [finnhubKey, alphaVantageKey, polygonKey])
+  }, [finnhubKey, alphaVantageKey, polygonKey, ibkrGatewayUrl])
 
   // Clean up debounce timer on unmount
   useEffect(() => {

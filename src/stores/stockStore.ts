@@ -5,6 +5,7 @@ import { SimulatorProvider } from '../services/simulatorProvider'
 import { FinnhubProvider } from '../services/finnhubProvider'
 import { AlphaVantageProvider } from '../services/alphaVantageProvider'
 import { PolygonProvider } from '../services/polygonProvider'
+import { InteractiveBrokersProvider } from '../services/interactiveBrokersProvider'
 import {
   computeVolatility, computeMomentum, detectTrend,
   computeRSI, computeMACD, computeADX, computeATR, computeEMACrossover,
@@ -72,6 +73,11 @@ function createProvider(symbol: string, onTick: (tick: StockTick) => void, onSta
     case 'polygon':
       if (settings.polygonKey) {
         return new PolygonProvider({ ...opts, apiKey: settings.polygonKey })
+      }
+      return new SimulatorProvider(opts)
+    case 'interactiveBrokers':
+      if (settings.ibkrGatewayUrl) {
+        return new InteractiveBrokersProvider({ ...opts, apiKey: settings.ibkrGatewayUrl })
       }
       return new SimulatorProvider(opts)
     default:

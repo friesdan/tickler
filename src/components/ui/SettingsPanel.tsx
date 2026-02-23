@@ -222,8 +222,8 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: Set
     routings, stingerAssignments, stingerVolume, style, periods, mixer, customPresets,
     toggleRouting, setStingerAssignment, setStingerVolume, setStyle, setPeriod, resetPeriods,
     setMixerVolume, resetMixer, resetDefaults, savePreset, loadPreset, deletePreset,
-    dataProvider, finnhubKey, alphaVantageKey, polygonKey,
-    setDataProvider, setFinnhubKey, setAlphaVantageKey, setPolygonKey,
+    dataProvider, finnhubKey, alphaVantageKey, polygonKey, ibkrGatewayUrl,
+    setDataProvider, setFinnhubKey, setAlphaVantageKey, setPolygonKey, setIbkrGatewayUrl,
   } = useSettingsStore()
 
   // Sync tab when panel opens with a specific initial tab
@@ -606,7 +606,7 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: Set
             <div className="space-y-6">
 
               {/* --- Getting Started (shown only when no keys are configured) --- */}
-              {!finnhubKey && !alphaVantageKey && !polygonKey && (
+              {!finnhubKey && !alphaVantageKey && !polygonKey && !ibkrGatewayUrl && (
                 <section>
                   <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl px-4 py-4 space-y-3">
                     <h3 className="text-white/50 text-[10px] uppercase tracking-[0.15em] font-semibold">
@@ -642,13 +642,15 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: Set
                     { key: 'finnhub', label: 'Finnhub', desc: 'Real-time WebSocket' },
                     { key: 'alphaVantage', label: 'Alpha Vantage', desc: 'REST polling (8s)' },
                     { key: 'polygon', label: 'Polygon.io', desc: 'WebSocket + REST' },
+                    { key: 'interactiveBrokers', label: 'IBKR', desc: 'Client Portal Gateway' },
                   ] as const).map((p) => {
                     const active = dataProvider === p.key
                     const needsKey = p.key !== 'simulator'
                     const hasKey =
                       p.key === 'finnhub' ? !!finnhubKey :
                       p.key === 'alphaVantage' ? !!alphaVantageKey :
-                      p.key === 'polygon' ? !!polygonKey : true
+                      p.key === 'polygon' ? !!polygonKey :
+                      p.key === 'interactiveBrokers' ? !!ibkrGatewayUrl : true
                     const dotColor = !needsKey ? null
                       : hasKey && active ? 'bg-emerald-400'
                       : hasKey ? 'bg-emerald-400/40'
@@ -712,6 +714,52 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: Set
                     value={polygonKey}
                     onChange={setPolygonKey}
                   />
+
+                  {/* IBKR Gateway URL */}
+                  <div className={`rounded-xl border transition-colors ${
+                    ibkrGatewayUrl
+                      ? 'bg-white/[0.04] border-white/[0.08]'
+                      : 'bg-white/[0.02] border-white/[0.05]'
+                  }`}>
+                    <div className="flex items-center justify-between px-3.5 pt-3 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                          ibkrGatewayUrl ? 'bg-emerald-400' : 'bg-white/15'
+                        }`} />
+                        <span className={`text-[11px] font-semibold ${ibkrGatewayUrl ? 'text-white/80' : 'text-white/50'}`}>
+                          Interactive Brokers
+                        </span>
+                        {ibkrGatewayUrl && (
+                          <span className="text-[9px] text-emerald-400/60 uppercase tracking-[0.1em]">configured</span>
+                        )}
+                      </div>
+                      <a
+                        href="https://www.interactivebrokers.com/en/trading/ib-api.php"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[9px] text-white/25 hover:text-white/60 underline underline-offset-2 decoration-white/15 hover:decoration-white/40 transition-colors cursor-pointer"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        IBKR Gateway
+                      </a>
+                    </div>
+                    <p className="px-3.5 pb-2.5 text-[9px] text-white/25 leading-snug">
+                      Requires IBKR Pro account + local gateway. Run gateway, log in at URL, paste URL here.
+                    </p>
+                    <div className="px-3.5 pb-3.5">
+                      <input
+                        type="text"
+                        value={ibkrGatewayUrl}
+                        onChange={(e) => setIbkrGatewayUrl(e.target.value)}
+                        placeholder="https://localhost:5000"
+                        className={`w-full rounded-lg px-3 py-2 text-white/80 text-[11px] outline-none transition-all placeholder:text-white/15 ${
+                          ibkrGatewayUrl
+                            ? 'bg-white/[0.06] border border-white/[0.12] focus:border-white/25 focus:bg-white/[0.08]'
+                            : 'bg-white/[0.04] border border-white/[0.08] focus:border-white/20 focus:bg-white/[0.06]'
+                        }`}
+                      />
+                    </div>
+                  </div>
                 </div>
               </section>
 
