@@ -1,6 +1,13 @@
 import { create } from 'zustand'
 import type { AudioData, MusicParameters } from '../types'
 
+export interface ChordInfo {
+  symbols: string[]     // chord names like "Dm7", "G7", "Cmaj7"
+  nashville: string[]   // Nashville notation like "2-7", "57", "1△7"
+  activeIndex: number   // which chord is currently playing (0-3)
+  mood: string
+}
+
 interface MusicStore {
   // Music parameters derived from stock data
   parameters: MusicParameters
@@ -11,6 +18,10 @@ interface MusicStore {
   // Audio analysis data from playing music
   audioData: AudioData
   setAudioData: (data: AudioData) => void
+
+  // Chord progression display
+  chordInfo: ChordInfo | null
+  setChordInfo: (info: ChordInfo | null) => void
 
   // Engine state
   engineType: 'lyria' | 'ace-step' | 'tone' | 'none'
@@ -47,6 +58,7 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
   parameters: { ...DEFAULT_PARAMS },
   targetParameters: { ...DEFAULT_PARAMS },
   audioData: EMPTY_AUDIO,
+  chordInfo: null,
   engineType: 'none',
   isPlaying: false,
   volume: 0.7,
@@ -69,6 +81,7 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
     })
   },
 
+  setChordInfo: (info) => set({ chordInfo: info }),
   setAudioData: (data) => set({ audioData: data }),
 
   setEngineType: (type) => set({ engineType: type }),

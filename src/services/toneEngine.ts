@@ -2,6 +2,7 @@ import * as Tone from 'tone'
 import type { MusicEngine, MusicParameters, CandlePatternType } from '../types'
 import { useStockStore } from '../stores/stockStore'
 import { useSettingsStore } from '../stores/settingsStore'
+import { useMusicStore } from '../stores/musicStore'
 import { getStyleConfig, type StyleConfig, type Progression, type DrumKit } from './styleConfigs'
 
 /**
@@ -52,6 +53,62 @@ function midi(note: number): string {
 function pickPattern<T>(patterns: T[], energy: number): T {
   const idx = Math.min(Math.floor(energy * patterns.length), patterns.length - 1)
   return patterns[idx]
+}
+
+// ---------------------------------------------------------------------------
+// Chord symbol & Nashville number computation
+// ---------------------------------------------------------------------------
+
+const NOTE_NAMES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
+
+function computeChordSymbol(
+  scaleIntervals: number[],
+  degree: number,
+  voicing: string,
+): { name: string; nashville: string } {
+  const len = scaleIntervals.length
+  const idx = (d: number) => {
+    const wrapped = ((d % len) + len) % len
+    const octUp = Math.floor(d / len)
+    return scaleIntervals[wrapped] + octUp * 12
+  }
+
+  const rootSemitone = idx(degree)
+  const rootNote = NOTE_NAMES[rootSemitone % 12]
+  const thirdInterval = idx(degree + 2) - rootSemitone
+  const seventhInterval = idx(degree + 6) - rootSemitone
+
+  const isMajor = thirdInterval === 4
+  const isMinor = thirdInterval === 3
+  const isMaj7 = seventhInterval === 11
+  const num = (degree % len) + 1
+
+  let name = rootNote
+  let nash = `${num}`
+
+  switch (voicing) {
+    case 'triad':
+      if (isMinor) { name += 'm'; nash += '-' }
+      break
+    case '7th':
+    case 'shell':
+      if (isMajor && isMaj7) { name += '△7'; nash += '△7' }
+      else if (isMajor) { name += '7'; nash += '7' }
+      else if (isMinor) { name += 'm7'; nash += '-7' }
+      else { name += '7'; nash += '7' }
+      break
+    case '9th':
+      if (isMajor && isMaj7) { name += '△9'; nash += '△9' }
+      else if (isMajor) { name += '9'; nash += '9' }
+      else if (isMinor) { name += 'm9'; nash += '-9' }
+      else { name += '9'; nash += '9' }
+      break
+    case 'sus':
+      name += 'sus'; nash += 'sus'
+      break
+  }
+
+  return { name, nashville: nash }
 }
 
 // ---------------------------------------------------------------------------
@@ -603,6 +660,18 @@ export class ToneEngine implements MusicEngine {
     this.walkingBassBar = [midi(beat1), midi(beat2), midi(beat3), midi(beat4)]
     this.walkIndex = 0
 
+    // Push chord info to store for display
+    const chordSymbols = prog.degrees.map((deg, i) => {
+      const v = this.overrideVoicing ?? prog.voicing[i]
+      return computeChordSymbol(scale, deg, v)
+    })
+    useMusicStore.getState().setChordInfo({
+      symbols: chordSymbols.map(c => c.name),
+      nashville: chordSymbols.map(c => c.nashville),
+      activeIndex: this.chordIndex,
+      mood: this.currentMood,
+    })
+
     // Advance chord index
     this.chordIndex = (this.chordIndex + 1) % prog.degrees.length
   }
@@ -673,6 +742,9 @@ export class ToneEngine implements MusicEngine {
     this.reverb = null
     this.masterGain = null
     this.analyzerNode = null
+
+    // Clear chord display
+    useMusicStore.getState().setChordInfo(null)
 
     console.log('[ToneEngine] Stopped')
   }

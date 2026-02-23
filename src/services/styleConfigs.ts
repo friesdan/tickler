@@ -176,44 +176,94 @@ const JAZZ_CONFIG: StyleConfig = {
   ],
   progressions: {
     euphoric: [
-      // ii-V-I major turnaround
+      // ii-V-I with dwell on tonic
       { scale: 'major', degrees: [1, 4, 0, 0], voicing: ['shell', '7th', '9th', '9th'] },
-      // I-vi-ii-V
+      // I-vi-ii-V (rhythm changes A)
       { scale: 'major', degrees: [0, 5, 1, 4], voicing: ['9th', 'shell', '7th', '7th'] },
-      // Modal Lydian jazz
-      { scale: 'lydian', degrees: [0, 1, 4, 0], voicing: ['9th', 'shell', '7th', '9th'] },
+      // Lydian brightness: I-II-IV-V
+      { scale: 'lydian', degrees: [0, 1, 3, 4], voicing: ['9th', '7th', '9th', '7th'] },
+      // iii-vi-ii-V (full turnaround)
+      { scale: 'major', degrees: [2, 5, 1, 4], voicing: ['7th', '7th', '9th', '7th'] },
+      // I-iii-IV-ii (gentle cycle)
+      { scale: 'major', degrees: [0, 2, 3, 1], voicing: ['9th', '7th', '9th', 'shell'] },
+      // vi-ii-V-I (turnaround from vi)
+      { scale: 'major', degrees: [5, 1, 4, 0], voicing: ['shell', '9th', '7th', '9th'] },
+      // I-IV-V-iii (bright movement)
+      { scale: 'major', degrees: [0, 3, 4, 2], voicing: ['9th', '7th', '7th', '9th'] },
+      // I-IV-iii-vi (descending 3rds)
+      { scale: 'major', degrees: [0, 3, 2, 5], voicing: ['9th', '9th', '7th', 'shell'] },
     ],
     calm: [
-      // ii-V-I-vi (classic jazz ballad)
-      { scale: 'dorian', degrees: [1, 4, 0, 5], voicing: ['9th', '7th', '9th', 'shell'] },
-      // Modal dorian vamp
+      // ii-V-I-vi (classic ballad)
+      { scale: 'major', degrees: [1, 4, 0, 5], voicing: ['9th', '7th', '9th', 'shell'] },
+      // Dorian vamp
       { scale: 'dorian', degrees: [0, 3, 0, 3], voicing: ['9th', '9th', 'shell', '7th'] },
-      // Bossa-ish I-ii-iii-ii
+      // Bossa: I-ii-iii-ii
       { scale: 'major', degrees: [0, 1, 2, 1], voicing: ['9th', 'shell', '7th', '9th'] },
+      // I-IV-I-V (simple ballad)
+      { scale: 'major', degrees: [0, 3, 0, 4], voicing: ['9th', '9th', 'shell', '7th'] },
+      // I-iii-vi-ii (circle of 3rds)
+      { scale: 'major', degrees: [0, 2, 5, 1], voicing: ['9th', '7th', 'shell', '9th'] },
+      // ii-V-iii-vi (extended resolution)
+      { scale: 'major', degrees: [1, 4, 2, 5], voicing: ['9th', '7th', '7th', 'shell'] },
+      // I-vi-IV-V (50s ballad)
+      { scale: 'major', degrees: [0, 5, 3, 4], voicing: ['9th', 'shell', '9th', '7th'] },
+      // I-ii-iii-IV (ascending stepwise)
+      { scale: 'major', degrees: [0, 1, 2, 3], voicing: ['9th', 'shell', '7th', '9th'] },
     ],
     tense: [
-      // Blues changes with tension
+      // i-iv-V-i (minor turnaround)
       { scale: 'dorian', degrees: [0, 3, 4, 0], voicing: ['7th', '7th', '7th', 'shell'] },
-      // Diminished approach: i-bII-V-i
+      // i-bII-V-i (phrygian approach)
       { scale: 'phrygianDom', degrees: [0, 1, 4, 0], voicing: ['7th', 'shell', '7th', '7th'] },
       // Minor ii-V-i
       { scale: 'aeolian', degrees: [1, 4, 0, 0], voicing: ['shell', '7th', '9th', '7th'] },
+      // i-iv-bVII-V (dorian tension)
+      { scale: 'dorian', degrees: [0, 3, 6, 4], voicing: ['7th', '7th', '7th', '7th'] },
+      // i-VI-ii-V (minor with major VI)
+      { scale: 'aeolian', degrees: [0, 5, 1, 4], voicing: ['7th', '9th', 'shell', '7th'] },
+      // bVI-bVII-i-V (Andalusian cadence)
+      { scale: 'aeolian', degrees: [5, 6, 0, 4], voicing: ['9th', '7th', '7th', '7th'] },
+      // i-bIII-bVI-V
+      { scale: 'aeolian', degrees: [0, 2, 5, 4], voicing: ['9th', '7th', '7th', '7th'] },
+      // i-IV-bVII-i (dorian modal)
+      { scale: 'dorian', degrees: [0, 3, 6, 0], voicing: ['7th', '9th', '7th', 'shell'] },
     ],
     dark: [
-      // Minor blues
+      // Minor blues: i-iv-V-i
       { scale: 'aeolian', degrees: [0, 3, 4, 0], voicing: ['7th', '7th', '7th', 'shell'] },
-      // Dark modal i-bVII-bVI-V
+      // i-bVII-bVI-V (descending)
       { scale: 'aeolian', degrees: [0, 6, 5, 4], voicing: ['9th', '7th', 'shell', '7th'] },
-      // Haunting i-iv-i-V
+      // i-iv-i-V (haunting)
       { scale: 'aeolian', degrees: [0, 3, 0, 4], voicing: ['9th', 'shell', '7th', '7th'] },
+      // i-iv-bVII-bVI (minor descent)
+      { scale: 'aeolian', degrees: [0, 3, 6, 5], voicing: ['7th', '7th', '9th', 'shell'] },
+      // i-bVI-bIII-bVII (relative major cycle)
+      { scale: 'aeolian', degrees: [0, 5, 2, 6], voicing: ['9th', '7th', '7th', '7th'] },
+      // i-ii-bVI-V (dark ii-V)
+      { scale: 'aeolian', degrees: [0, 1, 5, 4], voicing: ['7th', 'shell', '9th', '7th'] },
+      // bVI-V-i-iv (reversed minor)
+      { scale: 'aeolian', degrees: [5, 4, 0, 3], voicing: ['9th', '7th', '9th', '7th'] },
+      // i-bIII-bVII-iv (modal minor)
+      { scale: 'aeolian', degrees: [0, 2, 6, 3], voicing: ['7th', '9th', '7th', 'shell'] },
     ],
     neutral: [
-      // ii-V-I standard
-      { scale: 'dorian', degrees: [1, 4, 0, 5], voicing: ['7th', '7th', '9th', 'shell'] },
-      // Rhythm changes (simplified)
+      // ii-V-I-vi (standard swing)
+      { scale: 'major', degrees: [1, 4, 0, 5], voicing: ['7th', '7th', '9th', 'shell'] },
+      // I-vi-ii-V (rhythm changes)
       { scale: 'major', degrees: [0, 5, 1, 4], voicing: ['9th', 'shell', '7th', '7th'] },
-      // Modal vamp
-      { scale: 'dorian', degrees: [0, 3, 0, 4], voicing: ['9th', '7th', 'shell', '7th'] },
+      // Dorian i-IV-ii-V
+      { scale: 'dorian', degrees: [0, 3, 1, 4], voicing: ['9th', '7th', 'shell', '7th'] },
+      // iii-VI-ii-V (extended turnaround)
+      { scale: 'major', degrees: [2, 5, 1, 4], voicing: ['7th', '7th', '9th', '7th'] },
+      // I-IV-iii-ii (stepwise descent)
+      { scale: 'major', degrees: [0, 3, 2, 1], voicing: ['9th', '7th', '7th', 'shell'] },
+      // I-iii-vi-V
+      { scale: 'major', degrees: [0, 2, 5, 4], voicing: ['9th', '7th', 'shell', '7th'] },
+      // ii-iii-IV-V (ascending)
+      { scale: 'major', degrees: [1, 2, 3, 4], voicing: ['9th', '7th', '9th', '7th'] },
+      // vi-V-IV-V (pendulum)
+      { scale: 'major', degrees: [5, 4, 3, 4], voicing: ['shell', '7th', '9th', '7th'] },
     ],
   },
   synthOverrides: {

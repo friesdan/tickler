@@ -4,6 +4,7 @@ import { PriceDisplay } from './components/ui/PriceDisplay'
 import { MusicControls } from './components/ui/MusicControls'
 import { ParameterDisplay } from './components/ui/ParameterDisplay'
 import { SettingsPanel } from './components/ui/SettingsPanel'
+import { ChordDisplay } from './components/ui/ChordDisplay'
 import { useStockStore } from './stores/stockStore'
 import { useMusicStore } from './stores/musicStore'
 import { useSettingsStore } from './stores/settingsStore'
@@ -131,6 +132,10 @@ export function App() {
             Settings [S]
           </button>
           <ParameterDisplay />
+        </div>
+
+        <div className="pointer-events-auto absolute bottom-4 left-4">
+          <ChordDisplay />
         </div>
 
         <div className="pointer-events-auto absolute bottom-4 left-1/2 -translate-x-1/2">
