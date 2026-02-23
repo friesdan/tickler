@@ -4,6 +4,7 @@ import { PriceDisplay } from './components/ui/PriceDisplay'
 import { MusicControls } from './components/ui/MusicControls'
 import { ParameterDisplay } from './components/ui/ParameterDisplay'
 import { SettingsPanel } from './components/ui/SettingsPanel'
+import { PriceChart } from './components/ui/PriceChart'
 import { ChordDisplay } from './components/ui/ChordDisplay'
 import { useStockStore } from './stores/stockStore'
 import { useMusicStore } from './stores/musicStore'
@@ -120,6 +121,10 @@ export function App() {
 
       {/* UI Overlay */}
       <div className="absolute inset-0 pointer-events-none safe-top safe-bottom safe-left safe-right">
+        {/* Center — price chart (desktop only) */}
+        <div className="pointer-events-none absolute inset-0 hidden sm:flex items-center justify-center">
+          <PriceChart />
+        </div>
         {/* Top left — ticker + price */}
         <div className="pointer-events-auto absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-col gap-2 sm:gap-3 max-w-[55vw] sm:max-w-none">
           <TickerSelector />
