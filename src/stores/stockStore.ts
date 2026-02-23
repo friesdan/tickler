@@ -6,6 +6,7 @@ import {
   computeRSI, computeMACD, computeADX, computeATR, computeEMACrossover,
   HISTORY_SIZE,
 } from '../services/stockAnalyzer'
+import { useSettingsStore } from './settingsStore'
 import { clamp, mapRange } from '../utils/math'
 import { detectPatterns, TICKS_PER_CANDLE } from '../services/candleDetector'
 
@@ -53,12 +54,13 @@ export const useStockStore = create<StockStore>((set, get) => ({
     const change = tick.price - open
     const changePercent = open > 0 ? (change / open) * 100 : 0
 
-    // Technical indicators
-    const rsi = computeRSI(history)
-    const macdResult = computeMACD(history)
-    const adx = computeADX(history)
-    const rawATR = computeATR(history)
-    const macroTrend = computeEMACrossover(history)
+    // Technical indicators (use configurable periods)
+    const p = useSettingsStore.getState().periods
+    const rsi = computeRSI(history, p.rsi)
+    const macdResult = computeMACD(history, p.macdFast, p.macdSlow, p.macdSignal)
+    const adx = computeADX(history, p.adx)
+    const rawATR = computeATR(history, p.atr)
+    const macroTrend = computeEMACrossover(history, p.emaShort, p.emaLong)
 
     // Normalize ATR: relative to price, mapped to 0-1
     // Typical per-tick ATR ranges ~0.001%-0.5% of price

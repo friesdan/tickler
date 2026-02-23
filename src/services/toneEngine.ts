@@ -2,7 +2,7 @@ import * as Tone from 'tone'
 import type { MusicEngine, MusicParameters, CandlePatternType } from '../types'
 import { useStockStore } from '../stores/stockStore'
 import { useSettingsStore } from '../stores/settingsStore'
-import { getStyleConfig, type StyleConfig, type Progression } from './styleConfigs'
+import { getStyleConfig, type StyleConfig, type Progression, type DrumKit } from './styleConfigs'
 
 /**
  * Tone.js Synthesizer Engine
@@ -55,6 +55,51 @@ function pickPattern<T>(patterns: T[], energy: number): T {
 }
 
 // ---------------------------------------------------------------------------
+// Drum kit sample mappings — maps drumKit type to sample files
+// ---------------------------------------------------------------------------
+
+const DRUM_KIT_SAMPLES: Record<DrumKit, Record<string, string>> = {
+  electronic: {
+    C1: '/samples/drums/kick.mp3',
+    D1: '/samples/drums/clap.mp3',         // techno uses clap
+    E1: '/samples/drums/hihat-closed.mp3',
+    F1: '/samples/drums/hihat-open.mp3',
+  },
+  acoustic: {
+    C1: '/samples/drums/kick.mp3',
+    D1: '/samples/drums/snare.mp3',
+    E1: '/samples/drums/hihat-closed.mp3',
+    F1: '/samples/drums/hihat-open.mp3',
+  },
+  brush: {
+    C1: '/samples/drums/kick-jazz.mp3',    // low-passed kick (no high-end click)
+    D1: '/samples/drums/snare-brush.wav',  // synthesized brush (no real sample available)
+    E1: '/samples/drums/ride.mp3',         // ride bow
+    F1: '/samples/drums/ride-bell.wav',    // ride bell (synthesized)
+  },
+  minimal: {
+    C1: '/samples/drums/kick.mp3',
+    D1: '/samples/drums/snare.mp3',
+    E1: '/samples/drums/hihat-closed.mp3',
+    F1: '/samples/drums/hihat-open.mp3',
+  },
+}
+
+// Piano samples from Tone.js CDN (Salamander grand piano)
+const PIANO_SAMPLE_URLS: Record<string, string> = {
+  A1: 'https://tonejs.github.io/audio/salamander/A1.mp3',
+  A2: 'https://tonejs.github.io/audio/salamander/A2.mp3',
+  A3: 'https://tonejs.github.io/audio/salamander/A3.mp3',
+  A4: 'https://tonejs.github.io/audio/salamander/A4.mp3',
+  A5: 'https://tonejs.github.io/audio/salamander/A5.mp3',
+  A6: 'https://tonejs.github.io/audio/salamander/A6.mp3',
+  C2: 'https://tonejs.github.io/audio/salamander/C2.mp3',
+  C3: 'https://tonejs.github.io/audio/salamander/C3.mp3',
+  C4: 'https://tonejs.github.io/audio/salamander/C4.mp3',
+  C5: 'https://tonejs.github.io/audio/salamander/C5.mp3',
+}
+
+// ---------------------------------------------------------------------------
 // Engine
 // ---------------------------------------------------------------------------
 
@@ -71,6 +116,12 @@ export class ToneEngine implements MusicEngine {
   private pad: Tone.PolySynth | null = null
   private reverb: Tone.Reverb | null = null
   private delay: Tone.FeedbackDelay | null = null
+
+  // Sample-based instruments
+  private drumSampler: Tone.Sampler | null = null
+  private pianoSampler: Tone.Sampler | null = null
+  private drumSamplesLoaded = false
+  private pianoSamplesLoaded = false
 
   // Stinger system
   private stingerGain: Tone.Gain | null = null
@@ -89,6 +140,7 @@ export class ToneEngine implements MusicEngine {
   // Pattern state (recomputed when energy/density change significantly)
   private kickPattern = this.styleConfig.kickPatterns[1]
   private hatPattern = this.styleConfig.hatPatterns[1]
+  private snarePattern = this.styleConfig.snarePatterns[1]
   private bassPattern = this.styleConfig.bassPatterns[1]
   private energy = 0.5
   private density = 0.5
@@ -96,7 +148,8 @@ export class ToneEngine implements MusicEngine {
 
   // Bass note pool for current chord
   private currentBassNotes: string[] = []
-  // Walking bass state
+  // Walking bass state — pre-computed 4-note line per bar
+  private walkingBassBar: string[] = [] // [beat1, beat2, beat3, beat4]
   private walkIndex = 0
   private nextChordRoot = 0 // MIDI note of next chord root for approach tones
 
@@ -186,12 +239,37 @@ export class ToneEngine implements MusicEngine {
     }
     this.pad.volume.value = cfg.synthOverrides.pad.volume
 
+    // --- Drum Sampler ---
+    this.drumSamplesLoaded = false
+    const kitSamples = DRUM_KIT_SAMPLES[cfg.drumKit]
+    this.drumSampler = new Tone.Sampler({
+      urls: kitSamples,
+      onload: () => {
+        this.drumSamplesLoaded = true
+        console.log(`[ToneEngine] Drum samples loaded (${cfg.drumKit})`)
+      },
+    }).connect(this.masterGain)
+
+    // --- Piano Sampler (for jazz/lofi styles that use fmsynth pad) ---
+    this.pianoSamplesLoaded = false
+    if (cfg.padSynthType === 'fmsynth') {
+      this.pianoSampler = new Tone.Sampler({
+        urls: PIANO_SAMPLE_URLS,
+        onload: () => {
+          this.pianoSamplesLoaded = true
+          console.log('[ToneEngine] Piano samples loaded')
+        },
+      }).connect(this.reverb!)
+      this.pianoSampler.volume.value = cfg.synthOverrides.pad.volume
+    }
+
     // Init state
     this.chordIndex = 0
     this.barCount = 0
     this.stepInBar = 0
     this.kickPattern = cfg.kickPatterns[1] ?? cfg.kickPatterns[0]
     this.hatPattern = cfg.hatPatterns[1] ?? cfg.hatPatterns[0]
+    this.snarePattern = cfg.snarePatterns[1] ?? cfg.snarePatterns[0]
     this.bassPattern = cfg.bassPatterns[1] ?? cfg.bassPatterns[0]
     this.selectProgression('neutral')
     this.advanceChord()
@@ -229,6 +307,7 @@ export class ToneEngine implements MusicEngine {
   private onStep(time: number) {
     const step = this.stepInBar
     const cfg = this.styleConfig
+    const mix = useSettingsStore.getState().mixer
 
     // Apply swing: delay odd-numbered 16th steps
     let t = time
@@ -238,34 +317,62 @@ export class ToneEngine implements MusicEngine {
     }
 
     // --- Kick ---
-    const kickVel = this.kickPattern[step]
+    const kickVel = this.kickPattern[step] * mix.kick
     if (kickVel > 0) {
-      this.kick?.triggerAttackRelease('C1', '8n', t, kickVel)
+      if (this.drumSamplesLoaded && this.drumSampler) {
+        this.drumSampler.triggerAttackRelease('C1', '8n', t, kickVel)
+      } else {
+        this.kick?.triggerAttackRelease('C1', '8n', t, kickVel)
+      }
     }
 
-    // --- Hi-hats ---
-    const hatVel = this.hatPattern[step]
-    if (hatVel > 0) {
-      // Add slight humanization
-      const hatDecay = hatVel > 0.7 ? 0.06 : 0.03
-      this.hats?.triggerAttackRelease('C4', hatDecay, t, hatVel * 0.8)
+    // --- Snare ---
+    const snareVel = this.snarePattern[step] * mix.snare
+    if (snareVel > 0) {
+      if (this.drumSamplesLoaded && this.drumSampler) {
+        this.drumSampler.triggerAttackRelease('D1', '8n', t, snareVel)
+      }
+      // No synth fallback for snare — it's new functionality
+    }
+
+    // --- Hi-hats / Ride ---
+    const hatRaw = this.hatPattern[step]
+    if (hatRaw > 0 && mix.hats > 0) {
+      if (this.drumSamplesLoaded && this.drumSampler) {
+        if (hatRaw > 1.0) {
+          // Open hat / ride bell
+          const vel = (hatRaw - 1.0) * mix.hats
+          this.drumSampler.triggerAttackRelease('F1', '4n', t, vel * 0.8)
+        } else {
+          // Closed hat / ride ping
+          this.drumSampler.triggerAttackRelease('E1', '16n', t, hatRaw * mix.hats * 0.8)
+        }
+      } else {
+        // Synth fallback
+        const hatVel = Math.min(hatRaw, 1.0) * mix.hats
+        const hatDecay = hatVel > 0.7 ? 0.06 : 0.03
+        this.hats?.triggerAttackRelease('C4', hatDecay, t, hatVel * 0.8)
+      }
     }
 
     // --- Bass ---
     const bassHit = this.bassPattern[step]
-    if (bassHit > 0 && this.currentBassNotes.length > 0) {
+    const bassDur = cfg.bassNoteDuration ?? '16n'
+    if (bassHit > 0 && this.currentBassNotes.length > 0 && mix.bass > 0) {
       let note: string
-      if (cfg.bassMode === 'walking') {
-        // Walking bass: cycle root → 5th → octave → 5th sequentially
-        // On last bass hit before chord change (step 12+), play chromatic approach tone
-        if (step >= 12 && this.nextChordRoot > 0) {
-          // Chromatic approach: half-step below next root
-          note = midi(this.nextChordRoot - 1)
-        } else {
-          note = this.currentBassNotes[this.walkIndex % this.currentBassNotes.length]
-          this.walkIndex++
-        }
+      if (cfg.bassMode === 'walking' && this.walkingBassBar.length === 4) {
+        // Walking bass: pre-computed 4-note line per bar
+        // root (beat1) → chord tone (beat2) → scale tone (beat3) → approach (beat4)
+        note = this.walkingBassBar[this.walkIndex % 4]
+        this.walkIndex++
         // Gentle portamento for walking feel
+        if (this.acidSynth) {
+          this.acidSynth.portamento = 0.04
+        }
+      } else if (cfg.bassMode === 'walking') {
+        // Fallback if walkingBassBar not ready
+        note = this.currentBassNotes[this.walkIndex % this.currentBassNotes.length]
+        this.walkIndex++
         if (this.acidSynth) {
           this.acidSynth.portamento = 0.04
         }
@@ -282,7 +389,7 @@ export class ToneEngine implements MusicEngine {
           this.acidSynth.portamento = glide ? 0.08 : 0
         }
       }
-      this.acidSynth?.triggerAttackRelease(note, '16n', t, bassHit)
+      this.acidSynth?.triggerAttackRelease(note, bassDur, t, bassHit * mix.bass)
     }
 
     // --- Stinger: poll for new candlestick patterns ---
@@ -444,24 +551,57 @@ export class ToneEngine implements MusicEngine {
     const padMidi = chordFromDegree(scale, 60, degree, voicing)
     const padNotes = padMidi.map(midi)
 
-    // Release previous pad and trigger new
-    this.pad?.releaseAll(Tone.now())
-    this.pad?.triggerAttack(padNotes, Tone.now() + 0.05)
+    // Release previous pad and trigger new — use piano sampler if loaded
+    if (this.pianoSamplesLoaded && this.pianoSampler) {
+      this.pianoSampler.releaseAll(Tone.now())
+      this.pianoSampler.triggerAttack(padNotes, Tone.now() + 0.05)
+      // Piano replaces pad — silence any lingering pad notes
+      this.pad?.releaseAll(Tone.now())
+    } else {
+      this.pad?.releaseAll(Tone.now())
+      this.pad?.triggerAttack(padNotes, Tone.now() + 0.05)
+    }
 
-    // Build bass notes: root + 5th in octave 2 (MIDI 36 = C2)
+    // Build bass notes in octave 2 (MIDI 36 = C2)
     const rootMidi = 36 + scale[degree % scale.length]
+    const thirdDeg = (degree + 2) % scale.length
+    const thirdMidi = 36 + scale[thirdDeg]
     const fifthDeg = (degree + 4) % scale.length
     const fifthMidi = 36 + scale[fifthDeg]
-    // Also add octave of root
-    this.currentBassNotes = [midi(rootMidi), midi(fifthMidi), midi(rootMidi + 12)]
+    const seventhDeg = (degree + 6) % scale.length
+    const seventhMidi = 36 + scale[seventhDeg]
+    // General note pool for non-walking styles
+    this.currentBassNotes = [midi(rootMidi), midi(thirdMidi), midi(fifthMidi), midi(rootMidi + 12)]
 
-    // Reset walk index for walking bass
-    this.walkIndex = 0
-
-    // Compute next chord root for chromatic approach tones
+    // Compute next chord root for approach tones
     const nextIdx = (this.chordIndex + 1) % prog.degrees.length
     const nextDeg = prog.degrees[nextIdx]
     this.nextChordRoot = 36 + scale[nextDeg % scale.length]
+
+    // Pre-compute walking bass line: root → chord tone → scale tone → approach
+    // Beat 1: always root
+    const beat1 = rootMidi
+    // Beat 2: 3rd or 5th (alternate by bar)
+    const beat2 = this.barCount % 2 === 0 ? thirdMidi : fifthMidi
+    // Beat 3: pick a tone that moves toward the approach note
+    // Use 5th if ascending toward approach, or 3rd if descending
+    const approachTarget = this.nextChordRoot
+    const beat3candidates = [thirdMidi, fifthMidi, seventhMidi]
+    // Pick the beat3 note closest to the approach target for smooth motion
+    let beat3 = fifthMidi
+    let minDist = 99
+    for (const c of beat3candidates) {
+      const d = Math.abs(c - approachTarget)
+      if (d < minDist && c !== beat2) { minDist = d; beat3 = c }
+    }
+    // Beat 4: approach note — chromatic half step below or above next root
+    // Alternate approach direction, prefer below (more common in jazz)
+    const beat4 = this.barCount % 3 === 0
+      ? approachTarget + 1   // approach from above
+      : approachTarget - 1   // approach from below (standard)
+
+    this.walkingBassBar = [midi(beat1), midi(beat2), midi(beat3), midi(beat4)]
+    this.walkIndex = 0
 
     // Advance chord index
     this.chordIndex = (this.chordIndex + 1) % prog.degrees.length
@@ -504,6 +644,7 @@ export class ToneEngine implements MusicEngine {
     this.eventIds = []
 
     this.pad?.releaseAll()
+    this.pianoSampler?.releaseAll()
 
     this.kick?.dispose()
     this.hats?.dispose()
@@ -511,6 +652,8 @@ export class ToneEngine implements MusicEngine {
     this.lowPass?.dispose()
     this.delay?.dispose()
     this.pad?.dispose()
+    this.drumSampler?.dispose()
+    this.pianoSampler?.dispose()
     this.stingerGain?.dispose()
     this.reverb?.dispose()
     this.masterGain?.dispose()
@@ -523,6 +666,10 @@ export class ToneEngine implements MusicEngine {
     this.lowPass = null
     this.delay = null
     this.pad = null
+    this.drumSampler = null
+    this.pianoSampler = null
+    this.drumSamplesLoaded = false
+    this.pianoSamplesLoaded = false
     this.reverb = null
     this.masterGain = null
     this.analyzerNode = null
@@ -556,6 +703,7 @@ export class ToneEngine implements MusicEngine {
       if (Math.abs(adxNorm - this.energy) > 0.1) {
         this.energy = adxNorm
         this.kickPattern = pickPattern(cfg.kickPatterns, adxNorm)
+        this.snarePattern = pickPattern(cfg.snarePatterns, adxNorm)
         this.bassPattern = pickPattern(cfg.bassPatterns, adxNorm)
       }
     }
@@ -610,9 +758,16 @@ export class ToneEngine implements MusicEngine {
       }
     }
 
-    // Pad volume: louder when calm, quieter when chaotic
-    if (this.pad) {
-      const padVol = cfg.synthOverrides.pad.volume + (1 - params.energy) * 10
+    // Pad/piano volume: louder when calm, quieter when chaotic
+    // Mixer keys fader: 1 = default, 0 = muted (maps to -40dB)
+    const mix = useSettingsStore.getState().mixer
+    const keysMixDb = mix.keys > 0 ? 20 * Math.log10(mix.keys) : -60
+    const padVol = cfg.synthOverrides.pad.volume + (1 - params.energy) * 10 + keysMixDb
+    if (this.pianoSamplesLoaded && this.pianoSampler) {
+      this.pianoSampler.volume.rampTo(padVol, 1)
+      // Piano replaces pad — keep pad silent
+      if (this.pad) this.pad.volume.rampTo(-60, 0.5)
+    } else if (this.pad) {
       this.pad.volume.rampTo(padVol, 1)
     }
 

@@ -3,7 +3,13 @@ import {
   useSettingsStore,
   ROUTING_LABELS,
   STINGER_LABELS,
+  PERIOD_LABELS,
+  PERIOD_RANGES,
+  MIXER_LABELS,
+  ticksToTime,
   type RoutingKey,
+  type IndicatorPeriods,
+  type MixerVolumes,
 } from '../../stores/settingsStore'
 import { MUSIC_STYLES, getStyleConfig, type MusicStyle } from '../../services/styleConfigs'
 import type { CandlePatternType } from '../../types'
@@ -38,7 +44,7 @@ const PRESETS: Record<string, Preset> = {
   },
   q: {
     label: 'Q',
-    description: '9/21 EMA + price action — short-term NQ/QQQ scalper',
+    description: '9/21 EMA + price action — short-term NQ/MNQ futures scalper',
     routings: {
       rsiToBrightness: false,
       rsiToChordTension: false,
@@ -99,14 +105,25 @@ function SentimentDot({ sentiment }: { sentiment: 'bullish' | 'bearish' | 'neutr
 }
 
 // ---------------------------------------------------------------------------
+// Indicator period slider groups
+// ---------------------------------------------------------------------------
+
+const PERIOD_GROUPS: { label: string; keys: (keyof IndicatorPeriods)[] }[] = [
+  { label: 'Trend (EMA Crossover)', keys: ['emaShort', 'emaLong'] },
+  { label: 'MACD', keys: ['macdFast', 'macdSlow', 'macdSignal'] },
+  { label: 'Momentum & Volatility', keys: ['rsi', 'adx', 'atr'] },
+]
+
+// ---------------------------------------------------------------------------
 // Main panel
 // ---------------------------------------------------------------------------
 
 export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelProps) {
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('lyria-api-key') ?? '')
   const {
-    routings, stingers, stingerVolume, style,
-    toggleRouting, toggleStinger, setStingerVolume, setStyle, resetDefaults,
+    routings, stingers, stingerVolume, style, periods, mixer,
+    toggleRouting, toggleStinger, setStingerVolume, setStyle, setPeriod, resetPeriods,
+    setMixerVolume, resetMixer, resetDefaults,
   } = useSettingsStore()
 
   if (!isOpen) return null
@@ -115,7 +132,6 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
     const preset = PRESETS[key]
     if (!preset) return
     const store = useSettingsStore.getState()
-    // Set all routings from preset (missing keys stay as-is)
     const newRoutings = { ...store.routings }
     for (const [k, v] of Object.entries(preset.routings)) {
       newRoutings[k as RoutingKey] = v as boolean
@@ -128,7 +144,7 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="glass p-6 w-[480px] max-h-[85vh] flex flex-col">
+      <div className="glass p-6 w-[520px] max-h-[85vh] flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-white font-bold text-lg">Settings</h2>
@@ -224,6 +240,46 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
 
           <hr className="border-white/10" />
 
+          {/* --- Mixer --- */}
+          <section>
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-white/60 text-xs uppercase tracking-wider">Mixer</h3>
+              <button
+                onClick={resetMixer}
+                className="text-white/30 hover:text-white/60 text-xs cursor-pointer transition-colors"
+              >
+                Reset
+              </button>
+            </div>
+            <div className="flex gap-3 justify-between">
+              {(Object.keys(MIXER_LABELS) as (keyof MixerVolumes)[]).map((key) => (
+                <div key={key} className="flex flex-col items-center gap-1.5 flex-1">
+                  <span className="text-white/60 text-[10px] font-medium">
+                    {Math.round(mixer[key] * 100)}
+                  </span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1.5}
+                    step={0.05}
+                    value={mixer[key]}
+                    onChange={(e) => setMixerVolume(key, parseFloat(e.target.value))}
+                    className="w-full accent-white/60 cursor-pointer"
+                    style={{
+                      writingMode: 'vertical-lr' as any,
+                      direction: 'rtl',
+                      height: '80px',
+                      width: '20px',
+                    }}
+                  />
+                  <span className="text-white/40 text-[10px]">{MIXER_LABELS[key]}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <hr className="border-white/10" />
+
           {/* --- Signal Routing --- */}
           <section>
             <h3 className="text-white/60 text-xs uppercase tracking-wider mb-2">Signal Routing</h3>
@@ -241,6 +297,52 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
                   </div>
                 )
               })}
+            </div>
+          </section>
+
+          <hr className="border-white/10" />
+
+          {/* --- Indicator Periods --- */}
+          <section>
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-white/60 text-xs uppercase tracking-wider">Indicator Windows</h3>
+              <button
+                onClick={resetPeriods}
+                className="text-white/30 hover:text-white/60 text-xs cursor-pointer transition-colors"
+              >
+                Reset
+              </button>
+            </div>
+            <p className="text-white/25 text-xs mb-3">
+              Shorter windows react faster to price changes · Longer windows smooth out noise
+            </p>
+            <div className="space-y-4">
+              {PERIOD_GROUPS.map((group) => (
+                <div key={group.label}>
+                  <span className="text-white/35 text-[10px] uppercase tracking-wider">{group.label}</span>
+                  <div className="space-y-2 mt-1.5">
+                    {group.keys.map((key) => {
+                      const [min, max] = PERIOD_RANGES[key]
+                      const timeStr = ticksToTime(periods[key])
+                      return (
+                        <div key={key} className="flex items-center gap-3">
+                          <span className="text-white/50 text-xs w-20 flex-shrink-0">{PERIOD_LABELS[key]}</span>
+                          <input
+                            type="range"
+                            min={min}
+                            max={max}
+                            step={1}
+                            value={periods[key]}
+                            onChange={(e) => setPeriod(key, parseInt(e.target.value))}
+                            className="flex-1 accent-white/60 cursor-pointer"
+                          />
+                          <span className="text-white/60 text-xs w-10 text-right font-medium">{timeStr}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
 
@@ -276,7 +378,7 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
                 onChange={(e) => setStingerVolume(parseFloat(e.target.value))}
                 className="flex-1 accent-white/60 cursor-pointer"
               />
-              <span className="text-white/40 text-xs w-8 text-right">
+              <span className="text-white/40 text-xs w-10 text-right">
                 {Math.round(stingerVolume * 100)}%
               </span>
             </div>

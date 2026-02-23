@@ -15,6 +15,8 @@ export interface Progression {
 
 export type MusicStyle = 'techno' | 'jazz' | 'ambient' | 'lofi' | 'pop' | 'country'
 
+export type DrumKit = 'electronic' | 'acoustic' | 'brush' | 'minimal'
+
 export interface StyleConfig {
   name: string
   description: string // one-line feel description for UI cards
@@ -22,8 +24,11 @@ export interface StyleConfig {
   padSynthType: 'synth' | 'fmsynth' // synth = Tone.Synth, fmsynth = Tone.FMSynth (Rhodes)
   bassMode: 'random' | 'walking' // random = pick notes randomly, walking = sequential cycle
   kickPatterns: number[][] // 4 patterns by energy level
-  hatPatterns: number[][]
+  hatPatterns: number[][] // values 0–1 = closed hat/ride, >1 = open hat/ride bell (vel = val - 1)
+  snarePatterns: number[][] // 4 patterns by energy level
   bassPatterns: number[][]
+  drumKit: DrumKit // which drum sample set to use
+  bassNoteDuration?: string // '16n' | '8n' | '8n.' | '2n' — defaults to '16n'
   progressions: Record<string, Progression[]> // per mood
   synthOverrides: {
     kick: { pitchDecay?: number; octaves?: number; oscillator?: { type: string }; envelope?: object; volume?: number }
@@ -46,6 +51,7 @@ const TECHNO_CONFIG: StyleConfig = {
   swing: 0,
   padSynthType: 'synth',
   bassMode: 'random',
+  drumKit: 'electronic',
   kickPatterns: [
     [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
     [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
@@ -56,7 +62,13 @@ const TECHNO_CONFIG: StyleConfig = {
     [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0],
     [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
     [1, 0.5, 1, 0.5, 1, 0.5, 1, 0.5, 1, 0.5, 1, 0.5, 1, 0.5, 1, 0.5],
-    [1, 0, 0.5, 1, 0, 1, 0.5, 0, 1, 0, 0.5, 1, 0, 1, 0.5, 0],
+    [1, 0.5, 1, 1.6, 1, 0.5, 1, 0.5, 1, 0.5, 1, 1.6, 1, 0.5, 1, 0.5],
+  ],
+  snarePatterns: [
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0.3, 0, 1, 0, 0, 0.3, 0, 0, 0.3, 0, 1, 0, 0, 0.3],
   ],
   bassPatterns: [
     [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
@@ -96,8 +108,8 @@ const TECHNO_CONFIG: StyleConfig = {
     hats: {},
     bass: {
       oscillator: { type: 'sawtooth' },
-      envelope: { attack: 0.005, decay: 0.15, sustain: 0.2, release: 0.15 },
-      filterEnvelope: { attack: 0.01, decay: 0.15, sustain: 0.05, release: 0.1, baseFrequency: 150, octaves: 4 },
+      envelope: { attack: 0.003, decay: 0.15, sustain: 0.2, release: 0.15 },
+      filterEnvelope: { attack: 0.01, decay: 0.15, sustain: 0.05, release: 0.1, baseFrequency: 150, octaves: 5 },
     },
     pad: {
       oscillator: { type: 'triangle' },
@@ -120,25 +132,37 @@ const JAZZ_CONFIG: StyleConfig = {
   swing: 0.55,
   padSynthType: 'fmsynth',
   bassMode: 'walking',
+  drumKit: 'brush',
+  bassNoteDuration: '8n',
   kickPatterns: [
-    // Low: beat 1 only
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    // Medium: beats 1 and 3
-    [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-    // Higher: syncopated four-feel
-    [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0],
-    // Hot: driving four
-    [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+    // Low: beat 1 only, feathered (very soft)
+    [0.3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    // Medium: feathered on 1 & 3
+    [0.3, 0, 0, 0, 0, 0, 0, 0, 0.25, 0, 0, 0, 0, 0, 0, 0],
+    // Higher: feathered quarters (barely audible pulse)
+    [0.35, 0, 0, 0, 0.25, 0, 0, 0, 0.35, 0, 0, 0, 0.25, 0, 0, 0],
+    // Hot: firmer quarters with occasional accent
+    [0.5, 0, 0, 0, 0.4, 0, 0, 0, 0.5, 0, 0, 0, 0.4, 0, 0, 0.3],
   ],
   hatPatterns: [
-    // Ride quarter notes
-    [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
-    // Ride with offbeat accents
-    [1, 0, 0, 0.5, 1, 0, 0, 0, 1, 0, 0, 0.5, 1, 0, 0, 0],
-    // Swung 8ths (will be swing-delayed)
-    [1, 0, 0.7, 0, 1, 0, 0.7, 0, 1, 0, 0.7, 0, 1, 0, 0.7, 0],
-    // Busy swing with ghost notes
-    [1, 0.3, 0.7, 0, 1, 0.3, 0.7, 0.3, 1, 0.3, 0.7, 0, 1, 0.3, 0.7, 0.3],
+    // Low: ride quarters, beats 2&4 accented
+    [0.5, 0, 0, 0, 0.8, 0, 0, 0, 0.5, 0, 0, 0, 0.8, 0, 0, 0],
+    // Medium: spang-a-lang — "ding DING-da ding-da DING" (skip notes only on &2 and &3)
+    [0.6, 0, 0, 0, 0.9, 0, 0.4, 0, 0.6, 0, 0.4, 0, 0.9, 0, 0, 0],
+    // High: stronger spang-a-lang, light tap before beat 4
+    [0.7, 0, 0, 0, 1, 0, 0.5, 0, 0.7, 0, 0.5, 0, 1, 0, 0.3, 0],
+    // Hot: bebop ride — ghost notes between + ride bell on &4
+    [0.7, 0, 0.15, 0, 1, 0, 0.5, 0.15, 0.7, 0.15, 0.5, 0, 1, 0, 1.4, 0.2],
+  ],
+  snarePatterns: [
+    // Very sparse — no brush
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    // Light brush comping on 2 & 4
+    [0, 0, 0, 0, 0.35, 0, 0, 0, 0, 0, 0, 0, 0.35, 0, 0, 0],
+    // Brush with ghost notes between
+    [0, 0, 0.12, 0, 0.4, 0, 0.15, 0, 0, 0, 0.12, 0, 0.45, 0, 0.15, 0],
+    // Active brush comping — syncopated ghosts
+    [0, 0.1, 0.15, 0, 0.45, 0, 0.15, 0.1, 0, 0.1, 0.15, 0, 0.45, 0.1, 0.15, 0.1],
   ],
   bassPatterns: [
     // Walking quarter notes
@@ -193,17 +217,18 @@ const JAZZ_CONFIG: StyleConfig = {
     ],
   },
   synthOverrides: {
-    kick: { pitchDecay: 0.03, octaves: 6, envelope: { attack: 0.001, decay: 0.25, sustain: 0, release: 0.8 }, volume: -8 },
-    hats: { envelope: { attack: 0.001, decay: 0.12, release: 0.2 }, harmonicity: 3.5, modulationIndex: 8, resonance: 6000, octaves: 1, volume: -22 },
+    kick: { pitchDecay: 0.03, octaves: 6, envelope: { attack: 0.001, decay: 0.25, sustain: 0, release: 0.8 }, volume: -14 },
+    hats: { envelope: { attack: 0.001, decay: 0.12, release: 0.2 }, harmonicity: 3.5, modulationIndex: 8, resonance: 6000, octaves: 1, volume: -18 },
     bass: {
-      oscillator: { type: 'sine' },
-      envelope: { attack: 0.01, decay: 0.3, sustain: 0.4, release: 0.2 },
+      oscillator: { type: 'triangle' },
+      envelope: { attack: 0.015, decay: 0.4, sustain: 0.3, release: 0.2 },
+      filterEnvelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 0.15, baseFrequency: 200, octaves: 2.5 },
       volume: -8,
     },
     pad: {
       oscillator: { type: 'sine' },
       envelope: { attack: 0.01, decay: 0.8, sustain: 0.5, release: 1.5 },
-      volume: -16,
+      volume: -10,
       harmonicity: 3.5,
       modulationIndex: 10,
     },
@@ -223,6 +248,8 @@ const AMBIENT_CONFIG: StyleConfig = {
   swing: 0,
   padSynthType: 'synth',
   bassMode: 'random',
+  drumKit: 'minimal',
+  bassNoteDuration: '2n',
   kickPatterns: [
     // Silent
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -242,6 +269,13 @@ const AMBIENT_CONFIG: StyleConfig = {
     [0.3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0],
     // Sparse shimmer pattern
     [0.4, 0, 0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0, 0.4, 0, 0, 0],
+  ],
+  snarePatterns: [
+    // All silent — ambient rarely has snare
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.2, 0, 0, 0],
+    [0, 0, 0, 0, 0.2, 0, 0, 0, 0, 0, 0, 0, 0.2, 0, 0, 0],
   ],
   bassPatterns: [
     // Whole-note drone (hit on step 0 only)
@@ -290,7 +324,7 @@ const AMBIENT_CONFIG: StyleConfig = {
     hats: { envelope: { attack: 0.01, decay: 0.15, release: 0.3 }, harmonicity: 8, resonance: 6000, octaves: 0.5, volume: -24 },
     bass: {
       oscillator: { type: 'sine' },
-      envelope: { attack: 0.5, decay: 1, sustain: 0.6, release: 2 },
+      envelope: { attack: 0.8, decay: 2.0, sustain: 0.6, release: 2 },
       volume: -10,
     },
     pad: {
@@ -314,6 +348,8 @@ const LOFI_CONFIG: StyleConfig = {
   swing: 0.3,
   padSynthType: 'fmsynth',
   bassMode: 'random',
+  drumKit: 'acoustic',
+  bassNoteDuration: '8n.',
   kickPatterns: [
     // Muted boom-bap
     [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
@@ -329,10 +365,20 @@ const LOFI_CONFIG: StyleConfig = {
     [0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0],
     // Lazy shuffled
     [0.6, 0, 0.4, 0, 0.6, 0, 0.4, 0, 0.6, 0, 0.4, 0, 0.6, 0, 0.4, 0],
-    // Dusty 8ths
-    [0.7, 0, 0.5, 0, 0.7, 0, 0.5, 0, 0.7, 0, 0.5, 0, 0.7, 0, 0.5, 0],
-    // Shuffled with ghosts
-    [0.7, 0.2, 0.5, 0, 0.7, 0.2, 0.5, 0.2, 0.7, 0.2, 0.5, 0, 0.7, 0.2, 0.5, 0.2],
+    // Dusty with open hats (>1.0 = open)
+    [0.6, 0, 0.4, 0, 0.6, 0, 1.4, 0, 0.6, 0, 0.4, 0, 0.6, 0, 1.4, 0],
+    // Shuffled with ghosts and opens
+    [0.7, 0.2, 0.5, 0, 0.7, 0.2, 1.4, 0.2, 0.7, 0.2, 0.5, 0, 0.7, 0.2, 1.4, 0.2],
+  ],
+  snarePatterns: [
+    // Minimal boom-bap — snare on beat 3
+    [0, 0, 0, 0, 0, 0, 0, 0, 0.8, 0, 0, 0, 0, 0, 0, 0],
+    // Snare on beat 3
+    [0, 0, 0, 0, 0, 0, 0, 0, 0.8, 0, 0, 0, 0, 0, 0, 0],
+    // Boom-bap with ghost
+    [0, 0, 0, 0, 0, 0, 0, 0, 0.9, 0, 0, 0, 0, 0, 0.3, 0],
+    // Active boom-bap
+    [0, 0, 0.2, 0, 0, 0, 0, 0, 0.9, 0, 0, 0, 0, 0, 0.4, 0],
   ],
   bassPatterns: [
     // Warm quarter notes
@@ -383,7 +429,8 @@ const LOFI_CONFIG: StyleConfig = {
     hats: { envelope: { attack: 0.002, decay: 0.04, release: 0.06 }, harmonicity: 4, resonance: 3500, octaves: 1, volume: -20 },
     bass: {
       oscillator: { type: 'triangle' },
-      envelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.2 },
+      envelope: { attack: 0.008, decay: 0.2, sustain: 0.3, release: 0.2 },
+      filterEnvelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.15, baseFrequency: 180, octaves: 2 },
       volume: -8,
     },
     pad: {
@@ -409,6 +456,7 @@ const POP_CONFIG: StyleConfig = {
   swing: 0,
   padSynthType: 'synth',
   bassMode: 'random',
+  drumKit: 'acoustic',
   kickPatterns: [
     // Light four-on-floor
     [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
@@ -428,6 +476,16 @@ const POP_CONFIG: StyleConfig = {
     [1, 0.5, 1, 0.5, 1, 0.5, 1, 0.5, 1, 0.5, 1, 0.5, 1, 0.5, 1, 0.5],
     // Pop shuffle
     [1, 0.3, 0.7, 0.3, 1, 0.3, 0.7, 0.3, 1, 0.3, 0.7, 0.3, 1, 0.3, 0.7, 0.3],
+  ],
+  snarePatterns: [
+    // Light backbeat
+    [0, 0, 0, 0, 0.8, 0, 0, 0, 0, 0, 0, 0, 0.8, 0, 0, 0],
+    // Crisp backbeat on 2 & 4
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    // Backbeat with ghost
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0.3, 0, 1, 0, 0, 0],
+    // Active pop snare
+    [0, 0, 0.2, 0, 1, 0, 0, 0.2, 0, 0, 0.3, 0, 1, 0, 0, 0.2],
   ],
   bassPatterns: [
     // Root pumping
@@ -503,6 +561,7 @@ const COUNTRY_CONFIG: StyleConfig = {
   swing: 0.1,
   padSynthType: 'synth',
   bassMode: 'walking',
+  drumKit: 'acoustic',
   kickPatterns: [
     // Boom-chick (beat 1, 3)
     [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
@@ -522,6 +581,16 @@ const COUNTRY_CONFIG: StyleConfig = {
     [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
     // Busy country
     [1, 0, 0.7, 0, 1, 0, 0.7, 0, 1, 0, 0.7, 0, 1, 0, 0.7, 0],
+  ],
+  snarePatterns: [
+    // Light rimshot on 2 & 4
+    [0, 0, 0, 0, 0.7, 0, 0, 0, 0, 0, 0, 0, 0.7, 0, 0, 0],
+    // Standard country rimshot
+    [0, 0, 0, 0, 0.9, 0, 0, 0, 0, 0, 0, 0, 0.9, 0, 0, 0],
+    // Rimshot with ghost
+    [0, 0, 0, 0, 0.9, 0, 0, 0, 0, 0, 0.2, 0, 0.9, 0, 0, 0],
+    // Active country
+    [0, 0, 0.2, 0, 0.9, 0, 0, 0.2, 0, 0, 0.2, 0, 0.9, 0, 0, 0.2],
   ],
   bassPatterns: [
     // Root-5th alternating
@@ -571,6 +640,7 @@ const COUNTRY_CONFIG: StyleConfig = {
     bass: {
       oscillator: { type: 'triangle' },
       envelope: { attack: 0.005, decay: 0.2, sustain: 0.3, release: 0.15 },
+      filterEnvelope: { attack: 0.005, decay: 0.15, sustain: 0.1, release: 0.1, baseFrequency: 250, octaves: 2.5 },
       volume: -8,
     },
     pad: {

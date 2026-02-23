@@ -46,6 +46,91 @@ export const STINGER_LABELS: Record<CandlePatternType, { label: string; sentimen
 }
 
 // ---------------------------------------------------------------------------
+// Indicator periods
+// ---------------------------------------------------------------------------
+
+export interface IndicatorPeriods {
+  rsi: number          // default 140, range 20–300
+  macdFast: number     // default 120, range 20–200
+  macdSlow: number     // default 260, range 50–500
+  macdSignal: number   // default 90, range 20–200
+  adx: number          // default 140, range 20–300
+  atr: number          // default 140, range 20–300
+  emaShort: number     // default 200, range 20–400
+  emaLong: number      // default 500, range 100–1000
+}
+
+export const DEFAULT_PERIODS: IndicatorPeriods = {
+  rsi: 140,
+  macdFast: 120,
+  macdSlow: 260,
+  macdSignal: 90,
+  adx: 140,
+  atr: 140,
+  emaShort: 200,
+  emaLong: 500,
+}
+
+export const PERIOD_RANGES: Record<keyof IndicatorPeriods, [number, number]> = {
+  rsi: [20, 300],
+  macdFast: [20, 200],
+  macdSlow: [50, 500],
+  macdSignal: [20, 200],
+  adx: [20, 300],
+  atr: [20, 300],
+  emaShort: [20, 400],
+  emaLong: [100, 1000],
+}
+
+export const PERIOD_LABELS: Record<keyof IndicatorPeriods, string> = {
+  rsi: 'RSI',
+  macdFast: 'MACD Fast',
+  macdSlow: 'MACD Slow',
+  macdSignal: 'MACD Signal',
+  adx: 'ADX',
+  atr: 'ATR',
+  emaShort: 'EMA Short',
+  emaLong: 'EMA Long',
+}
+
+/** Simulator runs at 10 ticks/sec — convert tick count to human-readable duration */
+export function ticksToTime(ticks: number): string {
+  const seconds = ticks / 10
+  if (seconds < 60) return `${Math.round(seconds)}s`
+  const mins = Math.floor(seconds / 60)
+  const secs = Math.round(seconds % 60)
+  return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`
+}
+
+// ---------------------------------------------------------------------------
+// Mixer volumes — per-instrument faders (0 = muted, 1 = default)
+// ---------------------------------------------------------------------------
+
+export interface MixerVolumes {
+  kick: number
+  snare: number
+  hats: number
+  bass: number
+  keys: number
+}
+
+export const DEFAULT_MIXER: MixerVolumes = {
+  kick: 1,
+  snare: 1,
+  hats: 1,
+  bass: 1,
+  keys: 1,
+}
+
+export const MIXER_LABELS: Record<keyof MixerVolumes, string> = {
+  kick: 'Kick',
+  snare: 'Snare',
+  hats: 'Hats / Ride',
+  bass: 'Bass',
+  keys: 'Keys',
+}
+
+// ---------------------------------------------------------------------------
 // Store
 // ---------------------------------------------------------------------------
 
@@ -54,11 +139,17 @@ interface SettingsState {
   stingers: Record<CandlePatternType, boolean>
   stingerVolume: number // 0–1
   style: MusicStyle
+  periods: IndicatorPeriods
+  mixer: MixerVolumes
 
   toggleRouting: (key: RoutingKey) => void
   toggleStinger: (pattern: CandlePatternType) => void
   setStingerVolume: (v: number) => void
   setStyle: (style: MusicStyle) => void
+  setPeriod: (key: keyof IndicatorPeriods, value: number) => void
+  resetPeriods: () => void
+  setMixerVolume: (key: keyof MixerVolumes, value: number) => void
+  resetMixer: () => void
   resetDefaults: () => void
 }
 
@@ -95,6 +186,8 @@ export const useSettingsStore = create<SettingsState>()(
       stingers: { ...DEFAULT_STINGERS },
       stingerVolume: DEFAULT_STINGER_VOLUME,
       style: DEFAULT_STYLE,
+      periods: { ...DEFAULT_PERIODS },
+      mixer: { ...DEFAULT_MIXER },
 
       toggleRouting: (key) =>
         set((s) => ({ routings: { ...s.routings, [key]: !s.routings[key] } })),
@@ -106,12 +199,24 @@ export const useSettingsStore = create<SettingsState>()(
 
       setStyle: (style) => set({ style }),
 
+      setPeriod: (key, value) =>
+        set((s) => ({ periods: { ...s.periods, [key]: value } })),
+
+      resetPeriods: () => set({ periods: { ...DEFAULT_PERIODS } }),
+
+      setMixerVolume: (key, value) =>
+        set((s) => ({ mixer: { ...s.mixer, [key]: value } })),
+
+      resetMixer: () => set({ mixer: { ...DEFAULT_MIXER } }),
+
       resetDefaults: () =>
         set({
           routings: { ...DEFAULT_ROUTINGS },
           stingers: { ...DEFAULT_STINGERS },
           stingerVolume: DEFAULT_STINGER_VOLUME,
           style: DEFAULT_STYLE,
+          periods: { ...DEFAULT_PERIODS },
+          mixer: { ...DEFAULT_MIXER },
         }),
     }),
     { name: 'music-ticker-settings' },

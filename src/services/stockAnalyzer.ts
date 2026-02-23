@@ -42,22 +42,22 @@ export function computeRSI(history: number[], period = 140): number {
   return 100 - 100 / (1 + rs)
 }
 
-/** MACD: EMA(120) − EMA(260), signal = EMA(90) of MACD series */
-export function computeMACD(history: number[]): { macd: number; signal: number; histogram: number } {
-  if (history.length < 260) return { macd: 0, signal: 0, histogram: 0 }
+/** MACD: EMA(fast) − EMA(slow), signal = EMA(signal) of MACD series */
+export function computeMACD(history: number[], fast = 120, slow = 260, sig = 90): { macd: number; signal: number; histogram: number } {
+  if (history.length < slow) return { macd: 0, signal: 0, histogram: 0 }
   // Build MACD line series for signal EMA
-  const k12 = 2 / (120 + 1)
-  const k26 = 2 / (260 + 1)
-  let ema12 = history[0]
-  let ema26 = history[0]
+  const kFast = 2 / (fast + 1)
+  const kSlow = 2 / (slow + 1)
+  let emaFast = history[0]
+  let emaSlow = history[0]
   const macdSeries: number[] = []
   for (let i = 1; i < history.length; i++) {
-    ema12 = history[i] * k12 + ema12 * (1 - k12)
-    ema26 = history[i] * k26 + ema26 * (1 - k26)
-    macdSeries.push(ema12 - ema26)
+    emaFast = history[i] * kFast + emaFast * (1 - kFast)
+    emaSlow = history[i] * kSlow + emaSlow * (1 - kSlow)
+    macdSeries.push(emaFast - emaSlow)
   }
-  // Signal line: EMA(90) of MACD series
-  const signal = computeEMA(macdSeries, 90)
+  // Signal line: EMA(sig) of MACD series
+  const signal = computeEMA(macdSeries, sig)
   const macd = macdSeries[macdSeries.length - 1]
   return { macd, signal, histogram: macd - signal }
 }
@@ -172,10 +172,10 @@ export function analyzeStock(state: StockState): MusicParameters {
   // Mood: multi-indicator decision tree
   let mood: MusicParameters['mood'] = 'neutral'
   if (r.emaToMoodKey) {
-    if (macroTrend > 0.2 && rsi > 55) mood = 'euphoric'
-    else if (macroTrend > 0 && macdHistogram > 0) mood = 'calm'
-    else if (macroTrend < -0.2 && macdHistogram < 0) mood = 'tense'
-    else if (macroTrend < 0 && rsi < 45) mood = 'dark'
+    if (macroTrend > 0.1 && rsi > 52) mood = 'euphoric'
+    else if (macroTrend > 0) mood = 'calm'
+    else if (macroTrend < -0.1 && rsi < 48) mood = 'tense'
+    else if (macroTrend < 0) mood = 'dark'
   }
 
   // Key: macro trend driven
