@@ -4,6 +4,7 @@ import { useStockStore } from '../stores/stockStore'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useMusicStore } from '../stores/musicStore'
 import { getStyleConfig, type StyleConfig, type Progression, type DrumKit } from './styleConfigs'
+import { STINGER_SOUND_MAP } from './stingerSounds'
 
 /**
  * Tone.js Synthesizer Engine
@@ -461,138 +462,20 @@ export class ToneEngine implements MusicEngine {
   }
 
   // ---------------------------------------------------------------------------
-  // Stinger sound system — on-demand synths, disposed after playback
+  // Stinger sound system — delegates to stingerSounds registry
   // ---------------------------------------------------------------------------
 
   private triggerStinger(type: CandlePatternType, time: number) {
     if (!this.stingerGain) return
 
-    // Check if this stinger type is enabled
     const settings = useSettingsStore.getState()
-    if (!settings.stingers[type]) return
+    const soundId = settings.stingerAssignments[type]
+    if (soundId === 'off') return
 
-    // Apply stinger volume
     this.stingerGain.gain.value = settings.stingerVolume
 
-    switch (type) {
-      case 'doji':             this.playDoji(time); break
-      case 'hammer':           this.playHammer(time); break
-      case 'shootingStar':     this.playShootingStar(time); break
-      case 'bullishEngulfing': this.playBullishEngulfing(time); break
-      case 'bearishEngulfing': this.playBearishEngulfing(time); break
-      case 'morningStar':      this.playMorningStar(time); break
-      case 'eveningStar':      this.playEveningStar(time); break
-    }
-  }
-
-  /** Doji — high crystalline FM ping at E6 */
-  private playDoji(time: number) {
-    const synth = new Tone.FMSynth({
-      harmonicity: 8,
-      modulationIndex: 12,
-      oscillator: { type: 'sine' },
-      modulation: { type: 'triangle' },
-      envelope: { attack: 0.001, decay: 0.3, sustain: 0, release: 0.5 },
-      modulationEnvelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.3 },
-    }).connect(this.stingerGain!)
-    synth.volume.value = -2
-    synth.triggerAttackRelease('E6', '8n', time)
-    setTimeout(() => synth.dispose(), 2000)
-  }
-
-  /** Hammer — rising pluck double-tap G3 → D4 */
-  private playHammer(time: number) {
-    const synth = new Tone.PluckSynth({
-      attackNoise: 4,
-      dampening: 3000,
-      resonance: 0.95,
-    }).connect(this.stingerGain!)
-    synth.volume.value = -1
-    synth.triggerAttack('G3', time)
-    synth.triggerAttack('D4', time + 0.12)
-    setTimeout(() => synth.dispose(), 2500)
-  }
-
-  /** Shooting Star — descending FM zap with pitch sweep C6 → C4 */
-  private playShootingStar(time: number) {
-    const synth = new Tone.FMSynth({
-      harmonicity: 3,
-      modulationIndex: 20,
-      oscillator: { type: 'sine' },
-      modulation: { type: 'square' },
-      envelope: { attack: 0.001, decay: 0.5, sustain: 0, release: 0.3 },
-      modulationEnvelope: { attack: 0.001, decay: 0.4, sustain: 0, release: 0.2 },
-    }).connect(this.stingerGain!)
-    synth.volume.value = -2
-    synth.triggerAttackRelease('C6', '4n', time)
-    synth.frequency.exponentialRampTo(Tone.Frequency('C4').toFrequency(), 0.4, time)
-    setTimeout(() => synth.dispose(), 2500)
-  }
-
-  /** Bullish Engulfing — major power chord stab C4-G4-C5 with AM synth */
-  private playBullishEngulfing(time: number) {
-    const synth = new Tone.PolySynth(Tone.AMSynth).connect(this.stingerGain!)
-    synth.set({
-      harmonicity: 2,
-      oscillator: { type: 'square' },
-      modulation: { type: 'sawtooth' },
-      envelope: { attack: 0.005, decay: 0.4, sustain: 0.1, release: 0.6 },
-      modulationEnvelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.4 },
-    })
-    synth.volume.value = 0
-    synth.triggerAttackRelease(['C4', 'G4', 'C5'], '8n', time)
-    setTimeout(() => synth.dispose(), 3000)
-  }
-
-  /** Bearish Engulfing — diminished chord stab C3-Gb3-Bb3 with FM + poly */
-  private playBearishEngulfing(time: number) {
-    const synth = new Tone.PolySynth(Tone.FMSynth).connect(this.stingerGain!)
-    synth.set({
-      harmonicity: 1.5,
-      modulationIndex: 8,
-      oscillator: { type: 'sine' },
-      modulation: { type: 'triangle' },
-      envelope: { attack: 0.005, decay: 0.5, sustain: 0.05, release: 0.8 },
-      modulationEnvelope: { attack: 0.01, decay: 0.4, sustain: 0, release: 0.5 },
-    })
-    synth.volume.value = -1
-    synth.triggerAttackRelease(['C3', 'Gb3', 'Bb3'], '8n', time)
-    setTimeout(() => synth.dispose(), 3000)
-  }
-
-  /** Morning Star — ascending 3-note pluck fanfare C4 → E4 → G5 */
-  private playMorningStar(time: number) {
-    const synth = new Tone.PluckSynth({
-      attackNoise: 6,
-      dampening: 4000,
-      resonance: 0.97,
-    }).connect(this.stingerGain!)
-    synth.volume.value = 0
-    synth.triggerAttack('C4', time)
-    synth.triggerAttack('E4', time + 0.1)
-    synth.triggerAttack('G5', time + 0.2)
-    setTimeout(() => synth.dispose(), 3000)
-  }
-
-  /** Evening Star — descending 3-note FM doom Eb5 → Bb3 → Gb2 */
-  private playEveningStar(time: number) {
-    const synth = new Tone.FMSynth({
-      harmonicity: 2.5,
-      modulationIndex: 15,
-      oscillator: { type: 'sine' },
-      modulation: { type: 'square' },
-      envelope: { attack: 0.005, decay: 0.6, sustain: 0, release: 0.5 },
-      modulationEnvelope: { attack: 0.005, decay: 0.5, sustain: 0, release: 0.3 },
-    }).connect(this.stingerGain!)
-    synth.volume.value = -1
-    synth.triggerAttackRelease('Eb5', '16n', time)
-    setTimeout(() => {
-      synth.triggerAttackRelease('Bb3', '16n')
-    }, 120)
-    setTimeout(() => {
-      synth.triggerAttackRelease('Gb2', '8n')
-    }, 260)
-    setTimeout(() => synth.dispose(), 3000)
+    const def = STINGER_SOUND_MAP[soundId]
+    if (def) def.play(this.stingerGain!, time)
   }
 
   /** Move to the next chord in the progression, update bass notes and pad */
