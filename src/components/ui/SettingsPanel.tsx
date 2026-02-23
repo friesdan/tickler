@@ -84,16 +84,17 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   return (
     <button
       onClick={onToggle}
-      className={`relative w-9 h-[18px] rounded-full transition-all duration-200 cursor-pointer flex-shrink-0 ${
+      aria-pressed={on}
+      className={`relative w-11 h-6 sm:w-9 sm:h-[18px] rounded-full transition-all duration-200 cursor-pointer flex-shrink-0 ${
         on
           ? 'bg-white/25 shadow-[0_0_8px_rgba(255,255,255,0.1)]'
           : 'bg-white/[0.07]'
       }`}
     >
       <span
-        className={`absolute top-[2px] left-[2px] w-[14px] h-[14px] rounded-full transition-all duration-200 ${
+        className={`absolute top-[3px] sm:top-[2px] left-[3px] sm:left-[2px] w-[18px] h-[18px] sm:w-[14px] sm:h-[14px] rounded-full transition-all duration-200 ${
           on
-            ? 'translate-x-[18px] bg-white shadow-[0_0_6px_rgba(255,255,255,0.3)]'
+            ? 'translate-x-[20px] sm:translate-x-[18px] bg-white shadow-[0_0_6px_rgba(255,255,255,0.3)]'
             : 'translate-x-0 bg-white/30'
         }`}
       />
@@ -185,31 +186,32 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
       <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
 
       {/* Panel */}
-      <div className="relative w-[540px] max-h-[85vh] flex flex-col rounded-2xl overflow-hidden border border-white/[0.06] bg-[rgba(8,8,24,0.85)] backdrop-blur-xl shadow-[0_32px_64px_rgba(0,0,0,0.5)]">
+      <div className="relative w-full h-full sm:w-[540px] sm:h-auto sm:max-h-[85vh] flex flex-col sm:rounded-2xl overflow-hidden border-0 sm:border border-white/[0.06] bg-[rgba(8,8,24,0.95)] sm:bg-[rgba(8,8,24,0.85)] backdrop-blur-xl shadow-[0_32px_64px_rgba(0,0,0,0.5)]">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-1">
+        <div className="flex items-center justify-between px-4 sm:px-6 pt-5 pb-1 safe-top">
           <h2 className="text-white/90 font-semibold text-sm tracking-wide">Settings</h2>
           <button
             onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 text-white/30 hover:text-white/70 cursor-pointer transition-all"
+            className="w-10 h-10 sm:w-7 sm:h-7 flex items-center justify-center rounded-full hover:bg-white/10 active:bg-white/15 text-white/30 hover:text-white/70 cursor-pointer transition-all"
+            aria-label="Close settings"
           >
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+            <svg width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
               <line x1="1" y1="1" x2="9" y2="9" /><line x1="9" y1="1" x2="1" y2="9" />
             </svg>
           </button>
         </div>
 
         {/* Tab bar */}
-        <div className="flex gap-1 px-6 pt-2 pb-4">
+        <div className="flex gap-1 px-4 sm:px-6 pt-2 pb-4">
           {TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`px-3 py-1.5 rounded-lg text-[11px] uppercase tracking-[0.1em] font-medium cursor-pointer transition-all ${
+              className={`flex-1 sm:flex-none px-3 py-2.5 sm:py-1.5 rounded-lg text-[12px] sm:text-[11px] uppercase tracking-[0.1em] font-medium cursor-pointer transition-all ${
                 tab === t.key
                   ? 'bg-white/[0.12] text-white/80'
-                  : 'text-white/30 hover:text-white/50 hover:bg-white/[0.04]'
+                  : 'text-white/30 hover:text-white/50 active:bg-white/[0.08] hover:bg-white/[0.04]'
               }`}
             >
               {t.label}
@@ -221,7 +223,7 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
         <div className="h-px bg-white/[0.06]" />
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto settings-scroll px-6 py-5">
+        <div className="flex-1 overflow-y-auto settings-scroll px-4 sm:px-6 py-5">
 
           {/* ============================================================= */}
           {/* TAB: Sound — Style, Mixer, Presets                            */}
@@ -251,7 +253,7 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
               {/* --- Style --- */}
               <section>
                 <SectionHeader>Style</SectionHeader>
-                <div className="grid grid-cols-3 gap-1.5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                   {MUSIC_STYLES.map((s) => {
                     const cfg = getStyleConfig(s)
                     const active = style === s
@@ -280,12 +282,12 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
               {/* --- Mixer --- */}
               <section>
                 <SectionHeader action={<ResetButton onClick={resetMixer} />}>Mixer</SectionHeader>
-                <div className="flex justify-between px-2">
+                <div className="flex justify-between px-2 overflow-x-auto gap-3 sm:gap-0">
                   {(Object.keys(MIXER_LABELS) as (keyof MixerVolumes)[]).map((key) => {
                     const val = mixer[key]
                     const pct = Math.round(val * 100)
                     return (
-                      <div key={key} className="flex flex-col items-center gap-2 w-14">
+                      <div key={key} className="flex flex-col items-center gap-2 w-14 flex-shrink-0">
                         <span className={`text-[10px] font-mono tabular-nums ${val > 0 ? 'text-white/50' : 'text-white/20'}`}>
                           {pct}
                         </span>
@@ -312,7 +314,7 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
                   {(Object.keys(STINGER_LABELS) as CandlePatternType[]).map((pattern) => {
                     const { label, sentiment } = STINGER_LABELS[pattern]
                     return (
-                      <div key={pattern} className="flex items-center justify-between px-3 py-2">
+                      <div key={pattern} className="flex items-center justify-between px-3 py-3 sm:py-2">
                         <span className="text-white/60 text-[11px] flex items-center">
                           <SentimentDot sentiment={sentiment} />
                           {label}
@@ -354,7 +356,7 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
                   {(Object.keys(ROUTING_LABELS) as RoutingKey[]).map((key) => {
                     const { indicator, effect } = ROUTING_LABELS[key]
                     return (
-                      <div key={key} className="flex items-center justify-between px-3 py-2.5">
+                      <div key={key} className="flex items-center justify-between px-3 py-3 sm:py-2.5">
                         <span className="text-[11px]">
                           <span className="text-white/30 font-medium">{indicator}</span>
                           <span className="text-white/15 mx-1.5">&rarr;</span>
@@ -460,10 +462,10 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
 
         {/* Footer */}
         <div className="h-px bg-white/[0.06]" />
-        <div className="flex justify-end px-6 py-3">
+        <div className="flex justify-end px-4 sm:px-6 py-3 safe-bottom">
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-white/[0.08] hover:bg-white/[0.15] rounded-lg text-[11px] text-white/70 hover:text-white cursor-pointer transition-all font-medium"
+            className="w-full sm:w-auto px-5 py-3 sm:py-2 bg-white/[0.08] hover:bg-white/[0.15] active:bg-white/20 rounded-lg text-[12px] sm:text-[11px] text-white/70 hover:text-white cursor-pointer transition-all font-medium"
           >
             Done
           </button>

@@ -15,12 +15,12 @@ export function ChordDisplay() {
   if (!chordInfo || !isPlaying) return null
 
   return (
-    <div className="glass px-4 py-3 min-w-[200px]">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-white/30 text-[10px] uppercase tracking-wider font-bold">
+    <div className="glass px-3 sm:px-4 py-2.5 sm:py-3 min-w-[160px] sm:min-w-[200px]">
+      <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
+        <span className="text-white/30 text-[9px] sm:text-[10px] uppercase tracking-wider font-bold">
           Progression
         </span>
-        <span className={`text-[10px] ${MOOD_COLORS[chordInfo.mood] ?? 'text-white/40'}`}>
+        <span className={`text-[9px] sm:text-[10px] ${MOOD_COLORS[chordInfo.mood] ?? 'text-white/40'}`}>
           {chordInfo.mood}
         </span>
       </div>
@@ -31,21 +31,21 @@ export function ChordDisplay() {
           return (
             <div
               key={i}
-              className={`flex-1 text-center px-2 py-1.5 rounded transition-all duration-200 ${
+              className={`flex-1 text-center px-1.5 sm:px-2 py-1 sm:py-1.5 rounded transition-all duration-200 ${
                 active
                   ? 'bg-white/15 scale-105'
                   : 'bg-white/[0.03]'
               }`}
             >
               <div
-                className={`text-sm font-mono font-bold transition-colors duration-200 ${
+                className={`text-xs sm:text-sm font-mono font-bold transition-colors duration-200 ${
                   active ? 'text-white' : 'text-white/25'
                 }`}
               >
                 {nash}
               </div>
               <div
-                className={`text-[9px] font-mono transition-colors duration-200 ${
+                className={`text-[8px] sm:text-[9px] font-mono transition-colors duration-200 ${
                   active ? 'text-white/50' : 'text-white/15'
                 }`}
               >

@@ -24,18 +24,18 @@ export function PriceDisplay() {
     .join(' ')
 
   return (
-    <div className="glass px-4 py-3">
-      <div className="text-white/50 text-xs mb-1">{symbol}</div>
-      <div className="flex items-baseline gap-3">
-        <span className="text-2xl font-bold tabular-nums">
+    <div className="glass px-3 sm:px-4 py-2.5 sm:py-3">
+      <div className="text-white/50 text-[10px] sm:text-xs mb-1">{symbol}</div>
+      <div className="flex items-baseline gap-2 sm:gap-3">
+        <span className="text-xl sm:text-2xl font-bold tabular-nums">
           ${price.toFixed(2)}
         </span>
-        <span className={`text-sm font-semibold ${color}`}>
+        <span className={`text-xs sm:text-sm font-semibold ${color}`}>
           {isUp ? '+' : ''}{change.toFixed(2)} ({isUp ? '+' : ''}{changePercent.toFixed(2)}%)
         </span>
       </div>
       {sparkline.length > 2 && (
-        <svg width="120" height="24" className="mt-2 opacity-60">
+        <svg width="120" height="24" className="mt-1.5 sm:mt-2 opacity-60">
           <polyline
             points={points}
             fill="none"
