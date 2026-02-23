@@ -163,6 +163,7 @@ interface SettingsState {
   finnhubKey: string
   alphaVantageKey: string
   polygonKey: string
+  ibkrGatewayUrl: string
   favoriteTickers: string[]
 
   toggleRouting: (key: RoutingKey) => void
@@ -181,6 +182,7 @@ interface SettingsState {
   setFinnhubKey: (key: string) => void
   setAlphaVantageKey: (key: string) => void
   setPolygonKey: (key: string) => void
+  setIbkrGatewayUrl: (url: string) => void
   addFavorite: (symbol: string) => void
   removeFavorite: (symbol: string) => void
 }
@@ -237,6 +239,7 @@ export const useSettingsStore = create<SettingsState>()(
       finnhubKey: '',
       alphaVantageKey: '',
       polygonKey: '',
+      ibkrGatewayUrl: '',
       favoriteTickers: ['AAPL', 'TSLA', 'NVDA', 'SPY', 'QQQ'],
 
       toggleRouting: (key) =>
@@ -266,6 +269,7 @@ export const useSettingsStore = create<SettingsState>()(
       setFinnhubKey: (key) => set({ finnhubKey: key }),
       setAlphaVantageKey: (key) => set({ alphaVantageKey: key }),
       setPolygonKey: (key) => set({ polygonKey: key }),
+      setIbkrGatewayUrl: (url) => set({ ibkrGatewayUrl: url }),
       addFavorite: (symbol) =>
         set((s) => {
           if (s.favoriteTickers.includes(symbol)) return {}
@@ -286,7 +290,7 @@ export const useSettingsStore = create<SettingsState>()(
           mixer: { ...DEFAULT_MIXER },
           dataProvider: 'simulator' as DataProvider,
           favoriteTickers: ['AAPL', 'TSLA', 'NVDA', 'SPY', 'QQQ'],
-          // Preserve API keys: finnhubKey, alphaVantageKey, polygonKey
+          // Preserve API keys: finnhubKey, alphaVantageKey, polygonKey, ibkrGatewayUrl
         })),
 
       savePreset: (name) =>
@@ -331,7 +335,7 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'music-ticker-settings',
-      version: 3,
+      version: 4,
       migrate: (persisted: unknown, version: number) => {
         const state = persisted as Record<string, unknown>
         if (version < 2) {
@@ -354,6 +358,10 @@ export const useSettingsStore = create<SettingsState>()(
           if (!state.alphaVantageKey) state.alphaVantageKey = ''
           if (!state.polygonKey) state.polygonKey = ''
           if (!state.favoriteTickers) state.favoriteTickers = ['AAPL', 'TSLA', 'NVDA', 'SPY', 'QQQ']
+        }
+        if (version < 4) {
+          // v3 → v4: add IBKR gateway URL
+          state.ibkrGatewayUrl ??= ''
         }
         return state
       },

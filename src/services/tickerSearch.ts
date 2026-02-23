@@ -2,11 +2,13 @@ import type { TickerSearchResult } from '../types'
 import { searchFinnhub } from './finnhubProvider'
 import { searchAlphaVantage } from './alphaVantageProvider'
 import { searchPolygon } from './polygonProvider'
+import { searchIBKR } from './interactiveBrokersProvider'
 
 interface ApiKeys {
   finnhubKey?: string
   alphaVantageKey?: string
   polygonKey?: string
+  ibkrGatewayUrl?: string
 }
 
 // Simple cache: query -> { results, timestamp }
@@ -37,6 +39,9 @@ export async function searchTickers(query: string, apiKeys: ApiKeys): Promise<Ti
   }
   if (apiKeys.polygonKey) {
     searches.push(searchPolygon(trimmed, apiKeys.polygonKey))
+  }
+  if (apiKeys.ibkrGatewayUrl) {
+    searches.push(searchIBKR(trimmed, apiKeys.ibkrGatewayUrl))
   }
 
   if (searches.length === 0) return []
