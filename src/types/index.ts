@@ -88,6 +88,8 @@ export interface DetectedPattern {
 // Market data providers
 // ---------------------------------------------------------------------------
 
+export type AudioMode = 'generative' | 'playlist'
+
 export type DataProvider = 'simulator' | 'finnhub' | 'alphaVantage' | 'polygon' | 'interactiveBrokers'
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error' | 'reconnecting'

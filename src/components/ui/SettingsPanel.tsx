@@ -6,11 +6,14 @@ import {
   PERIOD_LABELS,
   PERIOD_RANGES,
   MIXER_LABELS,
+  TRACK_EFFECT_LABELS,
   ticksToTime,
   type RoutingKey,
+  type TrackEffectKey,
   type IndicatorPeriods,
   type MixerVolumes,
 } from '../../stores/settingsStore'
+import { useMusicStore } from '../../stores/musicStore'
 import { MUSIC_STYLES, getStyleConfig, type MusicStyle } from '../../services/styleConfigs'
 import { STINGER_SOUNDS, playStingerPreview, type StingerSoundId, type StingerAssignment } from '../../services/stingerSounds'
 import type { CandlePatternType, DataProvider } from '../../types'
@@ -220,11 +223,13 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: Set
   const [tab, setTab] = useState<Tab>(initialTab ?? 'sound')
   const {
     routings, stingerAssignments, stingerVolume, style, periods, mixer, customPresets,
+    trackEffectRoutings, toggleTrackEffect,
     toggleRouting, setStingerAssignment, setStingerVolume, setStyle, setPeriod, resetPeriods,
     setMixerVolume, resetMixer, resetDefaults, savePreset, loadPreset, deletePreset,
     dataProvider, finnhubKey, alphaVantageKey, polygonKey, ibkrGatewayUrl,
     setDataProvider, setFinnhubKey, setAlphaVantageKey, setPolygonKey, setIbkrGatewayUrl,
   } = useSettingsStore()
+  const audioMode = useMusicStore((s) => s.audioMode)
 
   // Sync tab when panel opens with a specific initial tab
   useEffect(() => {
@@ -560,6 +565,28 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: Set
                   })}
                 </div>
               </section>
+
+              {/* --- Track Effects (visible in playlist mode) --- */}
+              {audioMode === 'playlist' && (
+                <section>
+                  <SectionHeader>Track Effects</SectionHeader>
+                  <div className="bg-white/[0.02] rounded-lg border border-white/[0.04] divide-y divide-white/[0.04]">
+                    {(Object.keys(TRACK_EFFECT_LABELS) as TrackEffectKey[]).map((key) => {
+                      const { indicator, effect } = TRACK_EFFECT_LABELS[key]
+                      return (
+                        <div key={key} className="flex items-center justify-between px-3 py-3 sm:py-2.5">
+                          <span className="text-[11px]">
+                            <span className="text-white/30 font-medium">{indicator}</span>
+                            <span className="text-white/15 mx-1.5">&rarr;</span>
+                            <span className="text-white/60">{effect}</span>
+                          </span>
+                          <Toggle on={trackEffectRoutings[key]} onToggle={() => toggleTrackEffect(key)} />
+                        </div>
+                      )
+                    })}
+                  </div>
+                </section>
+              )}
 
               {/* --- Indicator Windows --- */}
               <section>

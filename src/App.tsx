@@ -10,7 +10,9 @@ import { useStockStore } from './stores/stockStore'
 import { useMusicStore } from './stores/musicStore'
 import { useSettingsStore } from './stores/settingsStore'
 import { useAudioAnalyzer } from './hooks/useAudioAnalyzer'
+import { PlaylistPanel } from './components/ui/PlaylistPanel'
 import { ToneEngine } from './services/toneEngine'
+import { UserTrackEngine } from './services/userTrackEngine'
 import { useEffect, useRef, useState } from 'react'
 import type { MusicEngine } from './types'
 
@@ -18,6 +20,7 @@ export function App() {
   const startProvider = useStockStore((s) => s.startProvider)
   const isPlaying = useMusicStore((s) => s.isPlaying)
   const setIsPlaying = useMusicStore((s) => s.setIsPlaying)
+  const audioMode = useMusicStore((s) => s.audioMode)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [settingsTab, setSettingsTab] = useState<'sound' | 'routing' | 'config'>('sound')
   const engineRef = useRef<MusicEngine | null>(null)
@@ -64,7 +67,7 @@ export function App() {
     }
   }, [])
 
-  // Create/destroy music engine when playing state changes
+  // Create/destroy music engine when playing state or audioMode changes
   useEffect(() => {
     if (!isPlaying) {
       engineRef.current?.stop()
@@ -72,7 +75,7 @@ export function App() {
       return
     }
 
-    const engine = new ToneEngine()
+    const engine = audioMode === 'playlist' ? new UserTrackEngine() : new ToneEngine()
     engineRef.current = engine
     engine.start().catch((err) => {
       console.error('Failed to start engine:', err)
@@ -85,9 +88,9 @@ export function App() {
         engineRef.current = null
       }
     }
-  }, [isPlaying, setIsPlaying])
+  }, [isPlaying, setIsPlaying, audioMode])
 
-  // Hot-swap engine when style changes while playing
+  // Hot-swap engine when style changes while playing (generative mode only)
   const lastStyleRef = useRef(useSettingsStore.getState().style)
   useEffect(() => {
     const unsub = useSettingsStore.subscribe((state) => {
@@ -95,6 +98,7 @@ export function App() {
       if (newStyle === lastStyleRef.current) return
       lastStyleRef.current = newStyle
       if (!useMusicStore.getState().isPlaying) return
+      if (useMusicStore.getState().audioMode === 'playlist') return // style irrelevant in playlist mode
       // Stop old engine, start new one with new style
       engineRef.current?.stop()
       const engine = new ToneEngine()
@@ -183,9 +187,9 @@ export function App() {
           <ParameterDisplay />
         </div>
 
-        {/* Bottom left — chord display (hidden on very small screens when controls overlap) */}
+        {/* Bottom left — chord display or playlist panel */}
         <div className="pointer-events-auto absolute bottom-16 left-3 sm:bottom-4 sm:left-4">
-          <ChordDisplay />
+          {audioMode === 'playlist' ? <PlaylistPanel /> : <ChordDisplay />}
         </div>
 
         {/* Bottom center — music controls */}
