@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import {
   useSettingsStore,
   ROUTING_LABELS,
@@ -12,6 +12,7 @@ import {
   type MixerVolumes,
 } from '../../stores/settingsStore'
 import { MUSIC_STYLES, getStyleConfig, type MusicStyle } from '../../services/styleConfigs'
+import { STINGER_SOUNDS, playStingerPreview, type StingerSoundId, type StingerAssignment } from '../../services/stingerSounds'
 import type { CandlePatternType } from '../../types'
 
 interface SettingsPanelProps {
@@ -156,10 +157,21 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('lyria-api-key') ?? '')
   const [tab, setTab] = useState<Tab>('sound')
   const {
-    routings, stingers, stingerVolume, style, periods, mixer,
-    toggleRouting, toggleStinger, setStingerVolume, setStyle, setPeriod, resetPeriods,
+    routings, stingerAssignments, stingerVolume, style, periods, mixer,
+    toggleRouting, setStingerAssignment, setStingerVolume, setStyle, setPeriod, resetPeriods,
     setMixerVolume, resetMixer, resetDefaults,
   } = useSettingsStore()
+
+  // Soundboard preview state
+  const [playingId, setPlayingId] = useState<StingerSoundId | null>(null)
+  const playingTimeout = useRef<ReturnType<typeof setTimeout>>(null)
+
+  const handlePreview = useCallback((id: StingerSoundId) => {
+    if (playingTimeout.current) clearTimeout(playingTimeout.current)
+    setPlayingId(id)
+    playStingerPreview(id, stingerVolume)
+    playingTimeout.current = setTimeout(() => setPlayingId(null), 1500)
+  }, [stingerVolume])
 
   if (!isOpen) return null
 
@@ -307,19 +319,59 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey }: SettingsPanelPr
                 </div>
               </section>
 
-              {/* --- Stinger Sounds --- */}
+              {/* --- Stinger Soundboard --- */}
               <section>
-                <SectionHeader>Stingers</SectionHeader>
+                <SectionHeader>Soundboard</SectionHeader>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                  {STINGER_SOUNDS.map((sound) => {
+                    const isPlaying = playingId === sound.id
+                    return (
+                      <button
+                        key={sound.id}
+                        onClick={() => handlePreview(sound.id)}
+                        className={`text-left px-2.5 py-2 rounded-lg cursor-pointer transition-all ${
+                          isPlaying
+                            ? 'bg-white/[0.15] ring-1 ring-white/25 scale-[0.97]'
+                            : 'bg-white/[0.03] hover:bg-white/[0.07] active:bg-white/[0.12]'
+                        }`}
+                      >
+                        <span className={`text-[10px] font-semibold block leading-tight ${isPlaying ? 'text-white' : 'text-white/60'}`}>
+                          {sound.label}
+                        </span>
+                        <span className="text-[8px] text-white/25 leading-tight line-clamp-1 mt-0.5 block">
+                          {sound.description}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+
+              {/* --- Pattern Assignments --- */}
+              <section>
+                <SectionHeader>Pattern Assignments</SectionHeader>
                 <div className="bg-white/[0.02] rounded-lg border border-white/[0.04] divide-y divide-white/[0.04]">
                   {(Object.keys(STINGER_LABELS) as CandlePatternType[]).map((pattern) => {
                     const { label, sentiment } = STINGER_LABELS[pattern]
+                    const current = stingerAssignments[pattern]
                     return (
-                      <div key={pattern} className="flex items-center justify-between px-3 py-3 sm:py-2">
-                        <span className="text-white/60 text-[11px] flex items-center">
+                      <div key={pattern} className="flex items-center justify-between px-3 py-2.5 sm:py-2 gap-3">
+                        <span className="text-white/60 text-[11px] flex items-center flex-shrink-0">
                           <SentimentDot sentiment={sentiment} />
                           {label}
                         </span>
-                        <Toggle on={stingers[pattern]} onToggle={() => toggleStinger(pattern)} />
+                        <select
+                          value={current}
+                          onChange={(e) => setStingerAssignment(pattern, e.target.value as StingerAssignment)}
+                          className="bg-white/[0.06] border border-white/[0.08] rounded-md px-2 py-1.5 text-[10px] text-white/70 outline-none focus:border-white/20 cursor-pointer appearance-none min-w-0 flex-1 max-w-[160px] truncate"
+                        >
+                          <option value="off" className="bg-[#111] text-white/50">Off</option>
+                          {STINGER_SOUNDS.map((s) => (
+                            <option key={s.id} value={s.id} className="bg-[#111] text-white/80">
+                              {s.label}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     )
                   })}

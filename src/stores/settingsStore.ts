@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { CandlePatternType } from '../types'
 import type { MusicStyle } from '../services/styleConfigs'
+import type { StingerAssignment } from '../services/stingerSounds'
 
 // ---------------------------------------------------------------------------
 // Signal routing keys — each maps one indicator to one music effect
@@ -136,14 +137,14 @@ export const MIXER_LABELS: Record<keyof MixerVolumes, string> = {
 
 interface SettingsState {
   routings: SignalRoutings
-  stingers: Record<CandlePatternType, boolean>
+  stingerAssignments: Record<CandlePatternType, StingerAssignment>
   stingerVolume: number // 0–1
   style: MusicStyle
   periods: IndicatorPeriods
   mixer: MixerVolumes
 
   toggleRouting: (key: RoutingKey) => void
-  toggleStinger: (pattern: CandlePatternType) => void
+  setStingerAssignment: (pattern: CandlePatternType, sound: StingerAssignment) => void
   setStingerVolume: (v: number) => void
   setStyle: (style: MusicStyle) => void
   setPeriod: (key: keyof IndicatorPeriods, value: number) => void
@@ -166,24 +167,35 @@ const DEFAULT_ROUTINGS: SignalRoutings = {
   volToBassFilter: true,
 }
 
-const DEFAULT_STINGERS: Record<CandlePatternType, boolean> = {
-  doji: true,
-  hammer: true,
-  shootingStar: true,
-  bullishEngulfing: true,
-  bearishEngulfing: true,
-  morningStar: true,
-  eveningStar: true,
+const DEFAULT_STINGER_ASSIGNMENTS: Record<CandlePatternType, StingerAssignment> = {
+  doji: 'crystalPing',
+  hammer: 'risingPluck',
+  shootingStar: 'fallingZap',
+  bullishEngulfing: 'powerChord',
+  bearishEngulfing: 'darkChord',
+  morningStar: 'hopeFanfare',
+  eveningStar: 'doomDescent',
 }
 
 const DEFAULT_STINGER_VOLUME = 0.8
 const DEFAULT_STYLE: MusicStyle = 'techno'
 
+// v1→v2 migration map: old boolean stingers → sound IDs
+const V1_STINGER_MAP: Record<CandlePatternType, StingerAssignment> = {
+  doji: 'crystalPing',
+  hammer: 'risingPluck',
+  shootingStar: 'fallingZap',
+  bullishEngulfing: 'powerChord',
+  bearishEngulfing: 'darkChord',
+  morningStar: 'hopeFanfare',
+  eveningStar: 'doomDescent',
+}
+
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
       routings: { ...DEFAULT_ROUTINGS },
-      stingers: { ...DEFAULT_STINGERS },
+      stingerAssignments: { ...DEFAULT_STINGER_ASSIGNMENTS },
       stingerVolume: DEFAULT_STINGER_VOLUME,
       style: DEFAULT_STYLE,
       periods: { ...DEFAULT_PERIODS },
@@ -192,8 +204,8 @@ export const useSettingsStore = create<SettingsState>()(
       toggleRouting: (key) =>
         set((s) => ({ routings: { ...s.routings, [key]: !s.routings[key] } })),
 
-      toggleStinger: (pattern) =>
-        set((s) => ({ stingers: { ...s.stingers, [pattern]: !s.stingers[pattern] } })),
+      setStingerAssignment: (pattern, sound) =>
+        set((s) => ({ stingerAssignments: { ...s.stingerAssignments, [pattern]: sound } })),
 
       setStingerVolume: (v) => set({ stingerVolume: Math.max(0, Math.min(1, v)) }),
 
@@ -215,13 +227,33 @@ export const useSettingsStore = create<SettingsState>()(
       resetDefaults: () =>
         set({
           routings: { ...DEFAULT_ROUTINGS },
-          stingers: { ...DEFAULT_STINGERS },
+          stingerAssignments: { ...DEFAULT_STINGER_ASSIGNMENTS },
           stingerVolume: DEFAULT_STINGER_VOLUME,
           style: DEFAULT_STYLE,
           periods: { ...DEFAULT_PERIODS },
           mixer: { ...DEFAULT_MIXER },
         }),
     }),
-    { name: 'music-ticker-settings' },
+    {
+      name: 'music-ticker-settings',
+      version: 2,
+      migrate: (persisted: unknown, version: number) => {
+        const state = persisted as Record<string, unknown>
+        if (version < 2) {
+          // Migrate v1 boolean stingers → v2 assignment map
+          const oldStingers = state.stingers as Record<CandlePatternType, boolean> | undefined
+          const assignments = { ...DEFAULT_STINGER_ASSIGNMENTS }
+          if (oldStingers) {
+            for (const [pattern, enabled] of Object.entries(oldStingers)) {
+              assignments[pattern as CandlePatternType] = enabled
+                ? V1_STINGER_MAP[pattern as CandlePatternType]
+                : 'off'
+            }
+          }
+          return { ...state, stingerAssignments: assignments, stingers: undefined }
+        }
+        return state
+      },
+    },
   ),
 )
