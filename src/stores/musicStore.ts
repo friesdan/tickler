@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { AudioData, MusicParameters } from '../types'
+import type { AudioData, AudioMode, MusicParameters } from '../types'
 
 export interface ChordInfo {
   symbols: string[]     // chord names like "Dm7", "G7", "Cmaj7"
@@ -27,9 +27,11 @@ interface MusicStore {
   engineType: 'lyria' | 'ace-step' | 'tone' | 'none'
   isPlaying: boolean
   volume: number
+  audioMode: AudioMode
   setEngineType: (type: 'lyria' | 'ace-step' | 'tone' | 'none') => void
   setIsPlaying: (playing: boolean) => void
   setVolume: (vol: number) => void
+  setAudioMode: (mode: AudioMode) => void
 }
 
 const DEFAULT_PARAMS: MusicParameters = {
@@ -62,6 +64,7 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
   engineType: 'none',
   isPlaying: false,
   volume: 0.7,
+  audioMode: 'generative' as AudioMode,
 
   setTargetParameters: (params) => set({ targetParameters: params }),
 
@@ -87,4 +90,5 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
   setEngineType: (type) => set({ engineType: type }),
   setIsPlaying: (playing) => set({ isPlaying: playing }),
   setVolume: (vol) => set({ volume: vol }),
+  setAudioMode: (mode) => set({ audioMode: mode }),
 }))

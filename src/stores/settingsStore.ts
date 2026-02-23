@@ -47,6 +47,33 @@ export const STINGER_LABELS: Record<CandlePatternType, { label: string; sentimen
 }
 
 // ---------------------------------------------------------------------------
+// Track effect routing keys — stock indicators → audio effects on user tracks
+// ---------------------------------------------------------------------------
+
+export interface TrackEffectRoutings {
+  lowPassEnabled: boolean      // RSI → Low-pass cutoff (200Hz–20kHz)
+  highPassEnabled: boolean     // ADX → High-pass cutoff (20Hz–2kHz)
+  bandPassEnabled: boolean     // ATR → Band-pass sweep (200Hz–8kHz)
+  playbackRateEnabled: boolean // ATR → Playback rate (0.85x–1.15x)
+}
+
+export type TrackEffectKey = keyof TrackEffectRoutings
+
+export const TRACK_EFFECT_LABELS: Record<TrackEffectKey, { indicator: string; effect: string }> = {
+  lowPassEnabled:      { indicator: 'RSI', effect: 'Low-Pass Filter' },
+  highPassEnabled:     { indicator: 'ADX', effect: 'High-Pass Filter' },
+  bandPassEnabled:     { indicator: 'ATR', effect: 'Band-Pass Sweep' },
+  playbackRateEnabled: { indicator: 'ATR', effect: 'Playback Rate' },
+}
+
+export const DEFAULT_TRACK_EFFECTS: TrackEffectRoutings = {
+  lowPassEnabled: true,
+  highPassEnabled: false,
+  bandPassEnabled: false,
+  playbackRateEnabled: false,
+}
+
+// ---------------------------------------------------------------------------
 // Indicator periods
 // ---------------------------------------------------------------------------
 
@@ -158,6 +185,10 @@ interface SettingsState {
   mixer: MixerVolumes
   customPresets: CustomPreset[]
 
+  // Track effect routings (playlist mode)
+  trackEffectRoutings: TrackEffectRoutings
+  toggleTrackEffect: (key: TrackEffectKey) => void
+
   // Market data provider
   dataProvider: DataProvider
   finnhubKey: string
@@ -235,6 +266,8 @@ export const useSettingsStore = create<SettingsState>()(
       mixer: { ...DEFAULT_MIXER },
       customPresets: [],
 
+      trackEffectRoutings: { ...DEFAULT_TRACK_EFFECTS },
+
       dataProvider: 'simulator' as DataProvider,
       finnhubKey: '',
       alphaVantageKey: '',
@@ -244,6 +277,9 @@ export const useSettingsStore = create<SettingsState>()(
 
       toggleRouting: (key) =>
         set((s) => ({ routings: { ...s.routings, [key]: !s.routings[key] } })),
+
+      toggleTrackEffect: (key) =>
+        set((s) => ({ trackEffectRoutings: { ...s.trackEffectRoutings, [key]: !s.trackEffectRoutings[key] } })),
 
       setStingerAssignment: (pattern, sound) =>
         set((s) => ({ stingerAssignments: { ...s.stingerAssignments, [pattern]: sound } })),
@@ -288,6 +324,7 @@ export const useSettingsStore = create<SettingsState>()(
           style: DEFAULT_STYLE,
           periods: { ...DEFAULT_PERIODS },
           mixer: { ...DEFAULT_MIXER },
+          trackEffectRoutings: { ...DEFAULT_TRACK_EFFECTS },
           dataProvider: 'simulator' as DataProvider,
           favoriteTickers: ['AAPL', 'TSLA', 'NVDA', 'SPY', 'QQQ'],
           // Preserve API keys: finnhubKey, alphaVantageKey, polygonKey, ibkrGatewayUrl
@@ -335,7 +372,7 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'music-ticker-settings',
-      version: 4,
+      version: 5,
       migrate: (persisted: unknown, version: number) => {
         const state = persisted as Record<string, unknown>
         if (version < 2) {
@@ -362,6 +399,12 @@ export const useSettingsStore = create<SettingsState>()(
         if (version < 4) {
           // v3 → v4: add IBKR gateway URL
           state.ibkrGatewayUrl ??= ''
+        }
+        if (version < 5) {
+          // v4 → v5: add track effect routings
+          if (!state.trackEffectRoutings) {
+            state.trackEffectRoutings = { ...DEFAULT_TRACK_EFFECTS }
+          }
         }
         return state
       },
