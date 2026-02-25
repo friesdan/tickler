@@ -34,10 +34,10 @@ export function PlaylistPanel() {
     <div className="glass w-64 max-h-72 flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-3 pt-2.5 pb-1.5">
-        <span className="text-white/50 text-[10px] uppercase tracking-[0.15em] font-semibold">
+        <span className="text-white/60 text-[10px] uppercase tracking-[0.15em] font-semibold">
           My Music
         </span>
-        <span className="text-white/20 text-[10px]">{tracks.length} track{tracks.length !== 1 ? 's' : ''}</span>
+        <span className="text-white/35 text-[10px]">{tracks.length} track{tracks.length !== 1 ? 's' : ''}</span>
       </div>
 
       {/* Upload */}
@@ -52,7 +52,7 @@ export function PlaylistPanel() {
         />
         <button
           onClick={() => fileRef.current?.click()}
-          className="w-full px-2 py-1.5 bg-white/[0.04] hover:bg-white/[0.1] border border-dashed border-white/[0.08] hover:border-white/[0.15] rounded-lg cursor-pointer transition-all text-[10px] text-white/30 hover:text-white/60"
+          className="w-full px-2 py-1.5 bg-white/[0.04] hover:bg-white/[0.1] border border-dashed border-white/[0.08] hover:border-white/[0.15] rounded-lg cursor-pointer transition-all text-[10px] text-white/40 hover:text-white/70"
         >
           + Add Tracks
         </button>
@@ -82,7 +82,7 @@ export function PlaylistPanel() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                  <span className="text-[9px] text-white/20 font-mono tabular-nums">
+                  <span className="text-[9px] text-white/20 font-data">
                     {formatDuration(track.duration)}
                   </span>
                   <button
@@ -108,7 +108,7 @@ export function PlaylistPanel() {
           {/* Previous */}
           <button
             onClick={previousTrack}
-            className="text-white/30 hover:text-white/70 cursor-pointer transition-colors"
+            className="text-white/40 hover:text-white/70 cursor-pointer transition-colors"
             aria-label="Previous track"
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
@@ -118,14 +118,14 @@ export function PlaylistPanel() {
           </button>
 
           {/* Now playing indicator */}
-          <span className="text-[9px] text-white/25 truncate max-w-[100px]">
+          <span className="text-[9px] text-white/35 truncate max-w-[100px]">
             {currentTrack?.name ?? '—'}
           </span>
 
           {/* Next */}
           <button
             onClick={advanceTrack}
-            className="text-white/30 hover:text-white/70 cursor-pointer transition-colors"
+            className="text-white/40 hover:text-white/70 cursor-pointer transition-colors"
             aria-label="Next track"
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">

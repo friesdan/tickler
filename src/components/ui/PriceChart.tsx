@@ -25,8 +25,8 @@ export function PriceChart() {
     const chart = createChart(el, {
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
-        textColor: 'rgba(255,255,255,0.3)',
-        fontFamily: 'ui-monospace, monospace',
+        textColor: 'rgba(255,255,255,0.4)',
+        fontFamily: "'SF Mono', 'Fira Code', 'JetBrains Mono', ui-monospace, monospace",
         fontSize: 11,
       },
       grid: {
@@ -40,7 +40,7 @@ export function PriceChart() {
       },
       rightPriceScale: {
         borderColor: 'rgba(255,255,255,0.05)',
-        textColor: 'rgba(255,255,255,0.3)',
+        textColor: 'rgba(255,255,255,0.4)',
       },
       timeScale: {
         visible: false,

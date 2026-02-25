@@ -118,7 +118,7 @@ export function TickerSelector({ onOpenConfig, onGoLive }: { onOpenConfig?: () =
               onChange={(e) => handleSearchInput(e.target.value)}
               onFocus={() => { if (searchResults.length > 0) setShowDropdown(true) }}
               placeholder="Search ticker..."
-              className="w-full bg-white/[0.06] border border-white/[0.08] rounded-md px-2.5 py-1.5 text-[11px] text-white/80 outline-none focus:border-white/20 placeholder:text-white/20 transition-all"
+              className="w-full bg-white/[0.06] border border-white/[0.12] rounded-md px-2.5 py-1.5 text-[11px] text-white/80 outline-none focus:border-white/20 placeholder:text-white/30 transition-all"
             />
             {isSearching && (
               <span className="absolute right-2 top-1/2 -translate-y-1/2 text-white/30 text-[10px]">...</span>
@@ -173,7 +173,7 @@ export function TickerSelector({ onOpenConfig, onGoLive }: { onOpenConfig?: () =
             {onGoLive ? (
               <button
                 onClick={onGoLive}
-                className="text-[10px] text-emerald-400/70 hover:text-emerald-400 cursor-pointer transition-colors font-semibold"
+                className="text-[10px] bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 px-3 py-1.5 rounded-full min-h-[36px] sm:min-h-0 cursor-pointer transition-all font-semibold"
               >
                 Go Live
               </button>
@@ -204,8 +204,8 @@ export function TickerSelector({ onOpenConfig, onGoLive }: { onOpenConfig?: () =
               onClick={() => setSymbol(t)}
               className={`px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-lg text-xs font-bold transition-all cursor-pointer min-h-[36px] sm:min-h-0 flex items-center ${
                 t === symbol
-                  ? 'bg-white/20 text-white'
-                  : 'text-white/40 hover:text-white/70 active:text-white/90'
+                  ? 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-400/20'
+                  : 'text-white/40 hover:text-white/80 hover:bg-white/[0.06] active:text-white/90'
               }`}
             >
               {t}

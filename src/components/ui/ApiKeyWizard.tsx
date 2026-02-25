@@ -126,8 +126,8 @@ export function ApiKeyWizard({ isOpen, onClose, initialProvider }: ApiKeyWizardP
             <div
               key={i}
               className={`w-2 h-2 rounded-full transition-all ${
-                i === wizardStep ? 'bg-white/60 scale-125' :
-                i < wizardStep ? 'bg-white/30' : 'bg-white/10'
+                i === wizardStep ? 'bg-emerald-400 scale-125' :
+                i < wizardStep ? 'bg-emerald-400/50' : 'bg-white/10'
               }`}
             />
           ))}
@@ -146,7 +146,7 @@ export function ApiKeyWizard({ isOpen, onClose, initialProvider }: ApiKeyWizardP
                   className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all cursor-pointer ${
                     selectedProvider === p.id
                       ? 'border-white/25 bg-white/[0.08]'
-                      : 'border-white/[0.06] hover:border-white/15 bg-white/[0.03]'
+                      : 'border-white/[0.10] hover:border-white/15 bg-white/[0.05]'
                   }`}
                 >
                   <span className="text-sm font-semibold text-white/80">{p.name}</span>
@@ -176,7 +176,7 @@ export function ApiKeyWizard({ isOpen, onClose, initialProvider }: ApiKeyWizardP
             </a>
             <button
               onClick={() => setWizardStep(2)}
-              className="w-full px-4 py-3 rounded-xl bg-white/15 hover:bg-white/25 text-white font-semibold text-sm transition-all cursor-pointer"
+              className="w-full px-4 py-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-semibold text-sm transition-all cursor-pointer"
             >
               I have my key
             </button>
@@ -193,7 +193,7 @@ export function ApiKeyWizard({ isOpen, onClose, initialProvider }: ApiKeyWizardP
               value={keyInput}
               onChange={(e) => { setKeyInput(e.target.value); setTestStatus('idle') }}
               placeholder={`${provider.name} API key`}
-              className="w-full bg-white/[0.06] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white/80 outline-none focus:border-white/20 placeholder:text-white/20 transition-all mb-4"
+              className="w-full bg-white/[0.06] border border-white/[0.12] rounded-xl px-4 py-3 text-sm text-white/80 outline-none focus:border-white/20 placeholder:text-white/30 transition-all mb-4"
               autoFocus
             />
             {testStatus === 'error' && (
@@ -202,7 +202,7 @@ export function ApiKeyWizard({ isOpen, onClose, initialProvider }: ApiKeyWizardP
             <button
               onClick={testConnection}
               disabled={!keyInput.trim() || testStatus === 'testing'}
-              className="w-full px-4 py-3 rounded-xl bg-white/15 hover:bg-white/25 disabled:opacity-30 disabled:cursor-not-allowed text-white font-semibold text-sm transition-all cursor-pointer"
+              className="w-full px-4 py-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 disabled:opacity-30 disabled:cursor-not-allowed text-emerald-300 font-semibold text-sm transition-all cursor-pointer"
             >
               {testStatus === 'testing' ? 'Testing...' : 'Test Connection'}
             </button>
@@ -227,7 +227,7 @@ export function ApiKeyWizard({ isOpen, onClose, initialProvider }: ApiKeyWizardP
             </p>
             <button
               onClick={onClose}
-              className="px-6 py-3 rounded-xl bg-white/15 hover:bg-white/25 text-white font-semibold text-sm transition-all cursor-pointer"
+              className="px-6 py-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-semibold text-sm transition-all cursor-pointer"
             >
               Start Exploring
             </button>
@@ -238,7 +238,7 @@ export function ApiKeyWizard({ isOpen, onClose, initialProvider }: ApiKeyWizardP
         {wizardStep > 0 && wizardStep < 3 && (
           <button
             onClick={() => setWizardStep((s) => s - 1)}
-            className="mt-4 text-xs text-white/25 hover:text-white/50 cursor-pointer transition-colors"
+            className="mt-4 text-xs text-white/40 hover:text-white/60 cursor-pointer transition-colors"
           >
             &#8592; Back
           </button>
