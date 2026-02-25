@@ -36,10 +36,10 @@ export function ParameterDisplay() {
   const trendDir = macroTrend > 0.1 ? 'up' : macroTrend < -0.1 ? 'down' : 'flat'
 
   return (
-    <div data-tour-id="parameter-display" className="space-y-2 min-w-[180px]">
+    <div data-tour-id="parameter-display" className="space-y-2 min-w-[200px]">
       {/* Music Parameters */}
       <div className="glass px-4 py-3 text-xs space-y-1.5">
-        <div className="text-white/40 font-bold uppercase tracking-wider mb-2">
+        <div className="text-white/55 font-bold uppercase tracking-wider mb-2">
           Parameters
         </div>
         <Row label="Mood" value={params.mood} className={moodColor} tooltip={PARAMETER_HELP.Mood} />
@@ -48,7 +48,7 @@ export function ParameterDisplay() {
         <Bar label="Brightness" value={params.brightness} tooltip={PARAMETER_HELP.Brightness} />
         <Bar label="Density" value={params.density} tooltip={PARAMETER_HELP.Density} />
         <Bar label="Energy" value={params.energy} tooltip={PARAMETER_HELP.Energy} />
-        <div className="border-t border-white/10 pt-1.5 mt-2">
+        <div className="border-t border-white/[0.15] pt-1.5 mt-2">
           <Row label="Trend" value={trend} className={
             trend === 'bullish' ? 'text-green-400' : trend === 'bearish' ? 'text-red-400' : 'text-white/50'
           } />
@@ -69,7 +69,7 @@ export function ParameterDisplay() {
 
       {/* Indicator → Music Mappings */}
       <div className="glass px-4 py-3 text-xs space-y-1.5">
-        <div className="text-white/40 font-bold uppercase tracking-wider mb-2">
+        <div className="text-white/55 font-bold uppercase tracking-wider mb-2">
           Indicators
         </div>
         <Indicator
@@ -119,10 +119,10 @@ export function ParameterDisplay() {
   )
 }
 
-function Row({ label, value, className = 'text-white/70', tooltip }: { label: string; value: string; className?: string; tooltip?: string }) {
+function Row({ label, value, className = 'text-white/80', tooltip }: { label: string; value: string; className?: string; tooltip?: string }) {
   return (
     <div className="flex justify-between items-center">
-      <span className="text-white/50 flex items-center">
+      <span className="text-white/60 flex items-center">
         {label}
         {tooltip && <InfoTooltip text={tooltip} />}
       </span>
@@ -135,15 +135,15 @@ function Bar({ label, value, tooltip }: { label: string; value: number; tooltip?
   return (
     <div>
       <div className="flex justify-between mb-0.5 items-center">
-        <span className="text-white/50 flex items-center">
+        <span className="text-white/60 flex items-center">
           {label}
           {tooltip && <InfoTooltip text={tooltip} />}
         </span>
-        <span className="text-white/50">{(value * 100).toFixed(0)}%</span>
+        <span className="text-white/60 font-data">{(value * 100).toFixed(0)}%</span>
       </div>
-      <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+      <div className="h-1 bg-white/[0.12] rounded-full overflow-hidden">
         <div
-          className="h-full bg-white/40 rounded-full transition-all duration-300"
+          className="h-full bg-gradient-to-r from-emerald-400/60 to-emerald-400/30 rounded-full transition-all duration-300"
           style={{ width: `${value * 100}%` }}
         />
       </div>
@@ -154,12 +154,12 @@ function Bar({ label, value, tooltip }: { label: string; value: number; tooltip?
 function Indicator({ label, value, desc, color, tooltip }: { label: string; value: string; desc: string; color: string; tooltip?: string }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-white/50 shrink-0 flex items-center">
+      <span className="text-white/60 shrink-0 flex items-center">
         {label}
         {tooltip && <InfoTooltip text={tooltip} />}
       </span>
-      <span className="text-white/20 text-[10px] truncate">{desc}</span>
-      <span className={`${color} shrink-0 tabular-nums`}>{value}</span>
+      <span className="text-white/40 text-[10px] truncate">{desc}</span>
+      <span className={`${color} shrink-0 font-data`}>{value}</span>
     </div>
   )
 }

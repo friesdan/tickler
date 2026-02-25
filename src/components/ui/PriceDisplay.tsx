@@ -27,15 +27,15 @@ export function PriceDisplay() {
 
   return (
     <div data-tour-id="price-display" className="glass px-3 sm:px-4 py-2.5 sm:py-3">
-      <div className="text-white/50 text-[10px] sm:text-xs mb-1">{symbol}</div>
+      <div className="text-white/60 text-[10px] sm:text-xs mb-1">{symbol}</div>
       {!hasData ? (
         <div className="text-white/25 text-xs py-1">Waiting for data...</div>
       ) : (
         <div className="flex items-baseline gap-2 sm:gap-3">
-          <span className="text-xl sm:text-2xl font-bold tabular-nums">
+          <span className="text-xl sm:text-2xl font-bold font-data">
             ${price.toFixed(2)}
           </span>
-          <span className={`text-xs sm:text-sm font-semibold ${color}`}>
+          <span className={`text-xs sm:text-sm font-semibold font-data ${color}`}>
             {isUp ? '+' : ''}{change.toFixed(2)} ({isUp ? '+' : ''}{changePercent.toFixed(2)}%)
           </span>
         </div>

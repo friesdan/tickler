@@ -17,7 +17,7 @@ export function ChordDisplay() {
   return (
     <div className="glass px-3 sm:px-4 py-2.5 sm:py-3 min-w-[160px] sm:min-w-[200px]">
       <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
-        <span className="text-white/30 text-[9px] sm:text-[10px] uppercase tracking-wider font-bold">
+        <span className="text-white/40 text-[9px] sm:text-[10px] uppercase tracking-wider font-bold">
           Progression
         </span>
         <span className={`text-[9px] sm:text-[10px] ${MOOD_COLORS[chordInfo.mood] ?? 'text-white/40'}`}>
@@ -38,14 +38,14 @@ export function ChordDisplay() {
               }`}
             >
               <div
-                className={`text-xs sm:text-sm font-mono font-bold transition-colors duration-200 ${
+                className={`text-xs sm:text-sm font-data font-bold transition-colors duration-200 ${
                   active ? 'text-white' : 'text-white/25'
                 }`}
               >
                 {nash}
               </div>
               <div
-                className={`text-[8px] sm:text-[9px] font-mono transition-colors duration-200 ${
+                className={`text-[8px] sm:text-[9px] font-data transition-colors duration-200 ${
                   active ? 'text-white/50' : 'text-white/15'
                 }`}
               >

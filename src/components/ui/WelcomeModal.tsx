@@ -73,11 +73,11 @@ export function WelcomeModal({ onTrySimulator, onConnectLive }: WelcomeModalProp
             return (
               <div key={step.label} className="flex items-center gap-3 sm:gap-4">
                 <div className="flex flex-col items-center gap-1.5 w-20 sm:w-24">
-                  <div className="text-white/50">
+                  <div className="text-white/60">
                     <Icon />
                   </div>
-                  <span className="text-[11px] font-bold text-white/80">{step.label}</span>
-                  <span className="text-[9px] text-white/40 leading-tight">{step.desc}</span>
+                  <span className="text-[11px] font-bold text-white/90">{step.label}</span>
+                  <span className="text-[9px] text-white/50 leading-tight">{step.desc}</span>
                 </div>
                 {i < WELCOME_CONTENT.steps.length - 1 && (
                   <span className="text-white/30 text-lg -mt-6">&#8594;</span>
@@ -92,13 +92,13 @@ export function WelcomeModal({ onTrySimulator, onConnectLive }: WelcomeModalProp
           <button
             onClick={onTrySimulator}
             autoFocus
-            className="px-6 py-3 rounded-xl bg-white/15 hover:bg-white/25 active:bg-white/30 text-white font-semibold text-sm transition-all cursor-pointer"
+            className="px-6 py-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-400/20 active:scale-[0.97] font-semibold text-sm transition-all cursor-pointer"
           >
             {WELCOME_CONTENT.ctaPrimary}
           </button>
           <button
             onClick={onConnectLive}
-            className="px-6 py-3 rounded-xl border border-white/15 hover:border-white/30 text-white/70 hover:text-white/90 text-sm transition-all cursor-pointer"
+            className="px-6 py-3 rounded-xl border border-white/20 hover:border-white/30 text-white/80 hover:text-white/90 text-sm transition-all cursor-pointer"
           >
             {WELCOME_CONTENT.ctaSecondary}
           </button>

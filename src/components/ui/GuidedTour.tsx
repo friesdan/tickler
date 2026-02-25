@@ -116,20 +116,20 @@ export function GuidedTour({ onComplete }: GuidedTourProps) {
         style={{ ...tooltipStyle, width: TOOLTIP_W, maxWidth: `calc(100vw - ${VIEWPORT_PAD * 2}px)` }}
       >
         <div className="text-sm font-bold text-white mb-1">{current.title}</div>
-        <div className="text-xs text-white/60 leading-relaxed mb-4">{current.body}</div>
+        <div className="text-xs text-white/70 leading-relaxed mb-4">{current.body}</div>
         <div className="flex items-center justify-between">
-          <span className="text-[10px] text-white/30">{step + 1} of {TOUR_STEPS.length}</span>
+          <span className="text-[10px] text-white/40">{step + 1} of {TOUR_STEPS.length}</span>
           <div className="flex gap-2">
             <button
               onClick={skip}
-              className="px-3 py-1.5 text-[11px] text-white/40 hover:text-white/70 cursor-pointer transition-colors"
+              className="px-3 py-1.5 text-[11px] text-white/50 hover:text-white/70 cursor-pointer transition-colors"
             >
               Skip Tour
             </button>
             <button
               onClick={next}
               autoFocus
-              className="px-4 py-1.5 text-[11px] rounded-lg bg-white/15 hover:bg-white/25 text-white font-semibold cursor-pointer transition-all"
+              className="px-4 py-1.5 text-[11px] rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-semibold cursor-pointer transition-all"
             >
               {isLast ? 'Done' : 'Next'}
             </button>

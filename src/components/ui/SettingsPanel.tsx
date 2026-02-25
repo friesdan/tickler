@@ -92,15 +92,15 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
       aria-pressed={on}
       className={`relative w-11 h-6 sm:w-9 sm:h-[18px] rounded-full transition-all duration-200 cursor-pointer flex-shrink-0 ${
         on
-          ? 'bg-white/25 shadow-[0_0_8px_rgba(255,255,255,0.1)]'
-          : 'bg-white/[0.07]'
+          ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.2)]'
+          : 'bg-white/[0.15]'
       }`}
     >
       <span
         className={`absolute top-[3px] sm:top-[2px] left-[3px] sm:left-[2px] w-[18px] h-[18px] sm:w-[14px] sm:h-[14px] rounded-full transition-all duration-200 ${
           on
-            ? 'translate-x-[20px] sm:translate-x-[18px] bg-white shadow-[0_0_6px_rgba(255,255,255,0.3)]'
-            : 'translate-x-0 bg-white/30'
+            ? 'translate-x-[20px] sm:translate-x-[18px] bg-white shadow-[0_0_6px_rgba(255,255,255,0.4)]'
+            : 'translate-x-0 bg-white/40'
         }`}
       />
     </button>
@@ -126,7 +126,7 @@ function SentimentDot({ sentiment }: { sentiment: 'bullish' | 'bearish' | 'neutr
 function SectionHeader({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div className="flex justify-between items-center mb-3">
-      <h3 className="text-white/50 text-[10px] uppercase tracking-[0.15em] font-semibold">{children}</h3>
+      <h3 className="text-white/60 text-[10px] uppercase tracking-[0.15em] font-semibold">{children}</h3>
       {action}
     </div>
   )
@@ -171,13 +171,13 @@ function ApiKeyCard({ name, hasKey, tier, signupUrl, signupLabel, value, onChang
   return (
     <div className={`rounded-xl border transition-colors ${
       hasKey
-        ? 'bg-white/[0.04] border-white/[0.08]'
-        : 'bg-white/[0.02] border-white/[0.05]'
+        ? 'bg-white/[0.05] border-emerald-400/30'
+        : 'bg-white/[0.05] border-dashed border-white/[0.12]'
     }`}>
       <div className="flex items-center justify-between px-3.5 pt-3 pb-2">
         <div className="flex items-center gap-2">
           <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-            hasKey ? 'bg-emerald-400' : 'bg-white/15'
+            hasKey ? 'bg-emerald-400' : 'bg-amber-400'
           }`} />
           <span className={`text-[11px] font-semibold ${hasKey ? 'text-white/80' : 'text-white/50'}`}>
             {name}
@@ -190,23 +190,23 @@ function ApiKeyCard({ name, hasKey, tier, signupUrl, signupLabel, value, onChang
           href={signupUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[9px] text-white/25 hover:text-white/60 underline underline-offset-2 decoration-white/15 hover:decoration-white/40 transition-colors cursor-pointer"
+          className="text-[9px] text-emerald-400/60 hover:text-emerald-400 underline underline-offset-2 decoration-emerald-400/30 hover:decoration-emerald-400/60 transition-colors cursor-pointer"
           onClick={(e) => e.stopPropagation()}
         >
           {signupLabel}
         </a>
       </div>
-      <p className="px-3.5 pb-2.5 text-[9px] text-white/25 leading-snug">{tier}</p>
+      <p className="px-3.5 pb-2.5 text-[9px] text-white/40 leading-snug">{tier}</p>
       <div className="px-3.5 pb-3.5">
         <input
           type="password"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={hasKey ? 'Key saved \u2014 paste to replace' : 'Paste API key here...'}
-          className={`w-full rounded-lg px-3 py-2 text-white/80 text-[11px] outline-none transition-all placeholder:text-white/15 ${
+          className={`w-full rounded-lg px-3 py-2 text-white/80 text-[11px] outline-none transition-all placeholder:text-white/30 ${
             hasKey
               ? 'bg-white/[0.06] border border-white/[0.12] focus:border-white/25 focus:bg-white/[0.08]'
-              : 'bg-white/[0.04] border border-white/[0.08] focus:border-white/20 focus:bg-white/[0.06]'
+              : 'bg-white/[0.04] border border-white/[0.12] focus:border-white/20 focus:bg-white/[0.06]'
           }`}
         />
       </div>
@@ -305,7 +305,7 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: Set
               onClick={() => setTab(t.key)}
               className={`flex-1 sm:flex-none px-3 py-2.5 sm:py-1.5 rounded-lg text-[12px] sm:text-[11px] uppercase tracking-[0.1em] font-medium cursor-pointer transition-all ${
                 tab === t.key
-                  ? 'bg-white/[0.12] text-white/80'
+                  ? 'bg-white/[0.15] text-white'
                   : 'text-white/30 hover:text-white/50 active:bg-white/[0.08] hover:bg-white/[0.04]'
               }`}
             >
@@ -334,7 +334,7 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: Set
                     <button
                       key={key}
                       onClick={() => applyPreset(key)}
-                      className="group px-3.5 py-2 bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.06] hover:border-white/[0.12] rounded-lg cursor-pointer transition-all"
+                      className="group px-3.5 py-2 bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.08] hover:border-white/[0.14] rounded-lg cursor-pointer transition-all"
                       title={preset.description}
                     >
                       <span className="text-[11px] font-medium text-white/60 group-hover:text-white/90 transition-colors">
@@ -346,7 +346,7 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: Set
                     <div key={p.name} className="group relative flex items-center">
                       <button
                         onClick={() => loadPreset(p.name)}
-                        className="px-3.5 py-2 pr-7 bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.06] hover:border-white/[0.12] rounded-lg cursor-pointer transition-all"
+                        className="px-3.5 py-2 pr-7 bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.08] hover:border-white/[0.14] rounded-lg cursor-pointer transition-all"
                         title={`Custom: ${p.style}`}
                       >
                         <span className="text-[11px] font-medium text-white/60 group-hover:text-white/90 transition-colors">
@@ -445,7 +445,7 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: Set
                     const pct = Math.round(val * 100)
                     return (
                       <div key={key} className="flex flex-col items-center gap-2 w-14 flex-shrink-0">
-                        <span className={`text-[10px] font-mono tabular-nums ${val > 0 ? 'text-white/50' : 'text-white/20'}`}>
+                        <span className={`text-[10px] font-data ${val > 0 ? 'text-white/50' : 'text-white/20'}`}>
                           {pct}
                         </span>
                         <input
@@ -534,7 +534,7 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: Set
                     onChange={(e) => setStingerVolume(parseFloat(e.target.value))}
                     className="slider flex-1"
                   />
-                  <span className="text-white/40 text-[10px] w-8 text-right font-mono tabular-nums">
+                  <span className="text-white/40 text-[10px] w-8 text-right font-data">
                     {Math.round(stingerVolume * 100)}
                   </span>
                 </div>
@@ -614,7 +614,7 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: Set
                                 onChange={(e) => setPeriod(key, parseInt(e.target.value))}
                                 className="slider flex-1"
                               />
-                              <span className="text-white/50 text-[10px] w-10 text-right font-mono tabular-nums">{timeStr}</span>
+                              <span className="text-white/50 text-[10px] w-10 text-right font-data">{timeStr}</span>
                             </div>
                           )
                         })}
@@ -646,7 +646,7 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: Set
                         'Select that provider from the Market Data grid.',
                       ].map((step, i) => (
                         <li key={i} className="flex gap-3 items-start">
-                          <span className="text-[9px] font-mono text-white/20 bg-white/[0.06] rounded-md w-5 h-5 flex items-center justify-center flex-shrink-0 mt-px">
+                          <span className="text-[9px] font-data text-white/20 bg-white/[0.06] rounded-md w-5 h-5 flex items-center justify-center flex-shrink-0 mt-px">
                             {i + 1}
                           </span>
                           <span className="text-[11px] text-white/45 leading-snug">{step}</span>
@@ -690,7 +690,7 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: Set
                         className={`text-left px-3 py-2.5 rounded-lg cursor-pointer transition-all ${
                           active
                             ? 'bg-white/[0.12] ring-1 ring-white/20'
-                            : 'bg-white/[0.03] hover:bg-white/[0.07]'
+                            : 'bg-white/[0.05] hover:bg-white/[0.09]'
                         }`}
                       >
                         <div className="flex items-center gap-1.5 mb-0.5">
@@ -701,7 +701,7 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: Set
                             {p.label}
                           </span>
                         </div>
-                        <span className="text-[9px] text-white/25 leading-tight block">
+                        <span className="text-[9px] text-white/40 leading-tight block">
                           {p.desc}
                         </span>
                       </button>
@@ -745,13 +745,13 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: Set
                   {/* IBKR Gateway URL */}
                   <div className={`rounded-xl border transition-colors ${
                     ibkrGatewayUrl
-                      ? 'bg-white/[0.04] border-white/[0.08]'
-                      : 'bg-white/[0.02] border-white/[0.05]'
+                      ? 'bg-white/[0.05] border-emerald-400/30'
+                      : 'bg-white/[0.05] border-dashed border-white/[0.12]'
                   }`}>
                     <div className="flex items-center justify-between px-3.5 pt-3 pb-2">
                       <div className="flex items-center gap-2">
                         <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                          ibkrGatewayUrl ? 'bg-emerald-400' : 'bg-white/15'
+                          ibkrGatewayUrl ? 'bg-emerald-400' : 'bg-amber-400'
                         }`} />
                         <span className={`text-[11px] font-semibold ${ibkrGatewayUrl ? 'text-white/80' : 'text-white/50'}`}>
                           Interactive Brokers
@@ -764,13 +764,13 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: Set
                         href="https://www.interactivebrokers.com/en/trading/ib-api.php"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[9px] text-white/25 hover:text-white/60 underline underline-offset-2 decoration-white/15 hover:decoration-white/40 transition-colors cursor-pointer"
+                        className="text-[9px] text-emerald-400/60 hover:text-emerald-400 underline underline-offset-2 decoration-emerald-400/30 hover:decoration-emerald-400/60 transition-colors cursor-pointer"
                         onClick={(e) => e.stopPropagation()}
                       >
                         IBKR Gateway
                       </a>
                     </div>
-                    <p className="px-3.5 pb-2.5 text-[9px] text-white/25 leading-snug">
+                    <p className="px-3.5 pb-2.5 text-[9px] text-white/40 leading-snug">
                       Requires IBKR Pro account + local gateway. Run gateway, log in at URL, paste URL here.
                     </p>
                     <div className="px-3.5 pb-3.5">
@@ -779,10 +779,10 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: Set
                         value={ibkrGatewayUrl}
                         onChange={(e) => setIbkrGatewayUrl(e.target.value)}
                         placeholder="https://localhost:5000"
-                        className={`w-full rounded-lg px-3 py-2 text-white/80 text-[11px] outline-none transition-all placeholder:text-white/15 ${
+                        className={`w-full rounded-lg px-3 py-2 text-white/80 text-[11px] outline-none transition-all placeholder:text-white/30 ${
                           ibkrGatewayUrl
                             ? 'bg-white/[0.06] border border-white/[0.12] focus:border-white/25 focus:bg-white/[0.08]'
-                            : 'bg-white/[0.04] border border-white/[0.08] focus:border-white/20 focus:bg-white/[0.06]'
+                            : 'bg-white/[0.04] border border-white/[0.12] focus:border-white/20 focus:bg-white/[0.06]'
                         }`}
                       />
                     </div>
@@ -803,7 +803,7 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: Set
                       value={apiKey}
                       onChange={(e) => setApiKey(e.target.value)}
                       placeholder="AIza..."
-                      className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-white/80 text-[11px] outline-none focus:border-white/20 focus:bg-white/[0.06] transition-all placeholder:text-white/15"
+                      className="flex-1 bg-white/[0.04] border border-white/[0.12] rounded-lg px-3 py-2 text-white/80 text-[11px] outline-none focus:border-white/20 focus:bg-white/[0.06] transition-all placeholder:text-white/30"
                     />
                     <button
                       onClick={() => {
@@ -817,7 +817,7 @@ export function SettingsPanel({ isOpen, onClose, onSaveApiKey, initialTab }: Set
                   </div>
                   <div className="text-white/15 text-[10px] mt-3">
                     <p>ACE-Step local server:</p>
-                    <code className="block mt-1 text-white/25 bg-white/[0.03] px-2.5 py-1.5 rounded-md font-mono">
+                    <code className="block mt-1 text-white/25 bg-white/[0.03] px-2.5 py-1.5 rounded-md font-data">
                       python ace-step-server.py
                     </code>
                   </div>

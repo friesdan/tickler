@@ -32,7 +32,7 @@ export function InfoTooltip({ text }: { text: string }) {
         aria-label="More info"
         aria-describedby={open ? tooltipId : undefined}
       >
-        <span className="w-3.5 h-3.5 rounded-full border border-white/20 text-white/30 group-hover:text-white/60 group-hover:border-white/40 text-[9px] leading-none flex items-center justify-center transition-colors">
+        <span className="w-3.5 h-3.5 rounded-full border border-white/25 text-white/40 group-hover:text-white/60 group-hover:border-white/40 text-[9px] leading-none flex items-center justify-center transition-colors">
           i
         </span>
       </button>
