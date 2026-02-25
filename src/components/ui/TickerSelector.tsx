@@ -14,7 +14,7 @@ function StatusDot({ status }: { status: ConnectionStatus }) {
   return <span className={`inline-block w-1.5 h-1.5 rounded-full ${cls} flex-shrink-0`} />
 }
 
-export function TickerSelector({ onOpenConfig }: { onOpenConfig?: () => void }) {
+export function TickerSelector({ onOpenConfig, onGoLive }: { onOpenConfig?: () => void; onGoLive?: () => void }) {
   const symbol = useStockStore((s) => s.symbol)
   const setSymbol = useStockStore((s) => s.setSymbol)
   const connectionStatus = useStockStore((s) => s.connectionStatus)
@@ -90,7 +90,7 @@ export function TickerSelector({ onOpenConfig }: { onOpenConfig?: () => void }) 
   }
 
   return (
-    <div className="glass px-3 sm:px-4 py-2.5 sm:py-3">
+    <div data-tour-id="ticker-selector" className="glass px-3 sm:px-4 py-2.5 sm:py-3">
       {/* Connection status + search */}
       <div className="flex items-center gap-2 mb-2">
         <StatusDot status={connectionStatus} />
@@ -153,27 +153,33 @@ export function TickerSelector({ onOpenConfig }: { onOpenConfig?: () => void }) 
           <div className="flex items-center gap-2 min-w-0">
             <span className="w-1 h-1 rounded-full bg-yellow-400/60 flex-shrink-0" />
             <span className="text-[10px] text-white/35 leading-tight truncate">
-              Simulated data.{' '}
-              {onOpenConfig ? (
-                <button
-                  onClick={onOpenConfig}
-                  className="text-white/50 hover:text-white/80 underline underline-offset-2 decoration-white/20 hover:decoration-white/50 cursor-pointer transition-colors"
-                >
-                  Add an API key
-                </button>
-              ) : (
-                <span>Add an API key in Settings</span>
-              )}
-              {' '}for live market data.
+              Simulated data
             </span>
           </div>
-          <button
-            onClick={() => setBannerDismissed(true)}
-            className="text-white/15 hover:text-white/40 cursor-pointer transition-colors flex-shrink-0 leading-none text-xs"
-            aria-label="Dismiss"
-          >
-            &times;
-          </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {onGoLive ? (
+              <button
+                onClick={onGoLive}
+                className="text-[10px] text-emerald-400/70 hover:text-emerald-400 cursor-pointer transition-colors font-semibold"
+              >
+                Go Live
+              </button>
+            ) : onOpenConfig ? (
+              <button
+                onClick={onOpenConfig}
+                className="text-[10px] text-white/50 hover:text-white/80 underline underline-offset-2 decoration-white/20 hover:decoration-white/50 cursor-pointer transition-colors"
+              >
+                Add API key
+              </button>
+            ) : null}
+            <button
+              onClick={() => setBannerDismissed(true)}
+              className="text-white/15 hover:text-white/40 cursor-pointer transition-colors leading-none text-xs"
+              aria-label="Dismiss"
+            >
+              &times;
+            </button>
+          </div>
         </div>
       )}
 
