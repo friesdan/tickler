@@ -6,6 +6,10 @@ import { ParameterDisplay } from './components/ui/ParameterDisplay'
 import { SettingsPanel } from './components/ui/SettingsPanel'
 import { PriceChart } from './components/ui/PriceChart'
 import { ChordDisplay } from './components/ui/ChordDisplay'
+import { WelcomeModal } from './components/ui/WelcomeModal'
+import { GuidedTour } from './components/ui/GuidedTour'
+import { ApiKeyWizard } from './components/ui/ApiKeyWizard'
+import { HelpButton } from './components/ui/HelpButton'
 import { useStockStore } from './stores/stockStore'
 import { useMusicStore } from './stores/musicStore'
 import { useSettingsStore } from './stores/settingsStore'
@@ -23,6 +27,9 @@ export function App() {
   const audioMode = useMusicStore((s) => s.audioMode)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [settingsTab, setSettingsTab] = useState<'sound' | 'routing' | 'config'>('sound')
+  const [showWelcome, setShowWelcome] = useState(() => localStorage.getItem('tickler-has-seen-welcome') !== 'true')
+  const [showTour, setShowTour] = useState(false)
+  const [showApiWizard, setShowApiWizard] = useState(false)
   const engineRef = useRef<MusicEngine | null>(null)
 
   const openConfig = () => {
@@ -168,13 +175,14 @@ export function App() {
         </div>
         {/* Top left — ticker + price */}
         <div className="pointer-events-auto absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-col gap-2 sm:gap-3 max-w-[55vw] sm:max-w-none">
-          <TickerSelector onOpenConfig={openConfig} />
+          <TickerSelector onOpenConfig={openConfig} onGoLive={() => setShowApiWizard(true)} />
           <PriceDisplay />
         </div>
 
         {/* Top right — settings + parameters */}
         <div className="pointer-events-auto absolute top-3 right-3 sm:top-4 sm:right-4 flex flex-col gap-2 sm:gap-3 items-end">
           <button
+            data-tour-id="settings-button"
             onClick={() => setSettingsOpen(true)}
             className="glass px-3 py-2 sm:py-1.5 text-white/30 hover:text-white/60 active:text-white/80 text-xs cursor-pointer transition-colors min-w-[44px] min-h-[44px] sm:min-h-0 flex items-center justify-center"
             aria-label="Open settings"
@@ -202,6 +210,38 @@ export function App() {
         isOpen={settingsOpen}
         onClose={() => { setSettingsOpen(false); setSettingsTab('sound') }}
         initialTab={settingsTab}
+      />
+
+      {/* Help button — bottom right */}
+      <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 pointer-events-auto z-30">
+        <HelpButton onStartTour={() => setShowTour(true)} />
+      </div>
+
+      {/* Onboarding overlays */}
+      {showWelcome && (
+        <WelcomeModal
+          onTrySimulator={() => {
+            localStorage.setItem('tickler-has-seen-welcome', 'true')
+            setShowWelcome(false)
+            if (localStorage.getItem('tickler-has-completed-tour') !== 'true') {
+              setShowTour(true)
+            }
+          }}
+          onConnectLive={() => {
+            localStorage.setItem('tickler-has-seen-welcome', 'true')
+            setShowWelcome(false)
+            setShowApiWizard(true)
+          }}
+        />
+      )}
+
+      {showTour && (
+        <GuidedTour onComplete={() => setShowTour(false)} />
+      )}
+
+      <ApiKeyWizard
+        isOpen={showApiWizard}
+        onClose={() => setShowApiWizard(false)}
       />
     </div>
   )

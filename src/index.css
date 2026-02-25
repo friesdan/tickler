@@ -180,3 +180,26 @@ body {
   user-select: none;
   -webkit-touch-callout: none;
 }
+
+/* ------------------------------------------------------------ */
+/* Onboarding animations                                        */
+/* ------------------------------------------------------------ */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes spotlightPulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08); }
+  50%      { box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.15); }
+}
+
+.animate-fadeInUp   { animation: fadeInUp 0.35s ease-out both; }
+.animate-fadeIn     { animation: fadeIn 0.25s ease-out both; }
+.animate-spotlightPulse { animation: spotlightPulse 2s ease-in-out infinite; }

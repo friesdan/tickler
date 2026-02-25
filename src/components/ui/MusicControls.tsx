@@ -16,7 +16,7 @@ export function MusicControls() {
   const currentTrackName = tracks[currentIndex]?.name
 
   return (
-    <div className="glass px-4 sm:px-6 py-3 flex items-center gap-3 sm:gap-6 w-full sm:w-auto justify-center">
+    <div data-tour-id="music-controls" className="glass px-4 sm:px-6 py-3 flex items-center gap-3 sm:gap-6 w-full sm:w-auto justify-center">
       <button
         onClick={() => setIsPlaying(!isPlaying)}
         className="w-12 h-12 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 flex items-center justify-center transition-all cursor-pointer flex-shrink-0"
