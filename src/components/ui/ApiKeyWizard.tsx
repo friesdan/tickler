@@ -61,6 +61,16 @@ export function ApiKeyWizard({ isOpen, onClose, initialProvider }: ApiKeyWizardP
     return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current) }
   }, [isOpen, initialProvider])
 
+  // Escape key to close (only when not mid-test)
+  useEffect(() => {
+    if (!isOpen) return
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape' && testStatus !== 'testing') onClose()
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [isOpen, testStatus, onClose])
+
   // Watch connectionStatus after test
   useEffect(() => {
     if (testStatus !== 'testing') return
@@ -97,8 +107,8 @@ export function ApiKeyWizard({ isOpen, onClose, initialProvider }: ApiKeyWizardP
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn" role="dialog" aria-modal="true" aria-labelledby="wizard-heading">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={wizardStep < 2 ? onClose : undefined} />
 
       <div className="relative w-full max-w-md glass px-6 py-6 sm:px-8 sm:py-8 animate-fadeInUp">
         {/* Close */}
@@ -126,8 +136,8 @@ export function ApiKeyWizard({ isOpen, onClose, initialProvider }: ApiKeyWizardP
         {/* Step 0: Choose Provider */}
         {wizardStep === 0 && (
           <div>
-            <h2 className="text-lg font-bold text-white mb-1">Choose a Data Provider</h2>
-            <p className="text-xs text-white/40 mb-5">All offer free tiers. Pick one to get started.</p>
+            <h2 id="wizard-heading" className="text-lg font-bold text-white mb-1">Choose a Data Provider</h2>
+            <p className="text-xs text-white/50 mb-5">All offer free tiers. Pick one to get started.</p>
             <div className="space-y-2">
               {PROVIDERS.map((p) => (
                 <button
@@ -155,7 +165,7 @@ export function ApiKeyWizard({ isOpen, onClose, initialProvider }: ApiKeyWizardP
         {wizardStep === 1 && (
           <div>
             <h2 className="text-lg font-bold text-white mb-1">Get Your API Key</h2>
-            <p className="text-xs text-white/40 mb-5">{provider.instructions}</p>
+            <p className="text-xs text-white/50 mb-5">{provider.instructions}</p>
             <a
               href={provider.signupUrl}
               target="_blank"
@@ -177,7 +187,7 @@ export function ApiKeyWizard({ isOpen, onClose, initialProvider }: ApiKeyWizardP
         {wizardStep === 2 && (
           <div>
             <h2 className="text-lg font-bold text-white mb-1">Paste Your Key</h2>
-            <p className="text-xs text-white/40 mb-4">Your key is stored locally and never sent to our servers.</p>
+            <p className="text-xs text-white/50 mb-4">Your key is stored locally and never sent to our servers.</p>
             <input
               type="password"
               value={keyInput}
@@ -212,7 +222,7 @@ export function ApiKeyWizard({ isOpen, onClose, initialProvider }: ApiKeyWizardP
           <div className="text-center">
             <div className="text-4xl mb-3">&#10003;</div>
             <h2 className="text-lg font-bold text-white mb-1">You're Live!</h2>
-            <p className="text-xs text-white/40 mb-6">
+            <p className="text-xs text-white/50 mb-6">
               Real-time market data from {provider.name} is now driving the music.
             </p>
             <button

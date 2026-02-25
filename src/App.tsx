@@ -133,10 +133,13 @@ export function App() {
   // Connect audio analyzer
   useAudioAnalyzer(isPlaying ? engineRef.current : null)
 
-  // Keyboard shortcuts
+  // Keyboard shortcuts — disabled when modals/overlays are open or focus is in form elements
+  const anyModalOpen = showWelcome || showTour || showApiWizard || settingsOpen
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.target instanceof HTMLInputElement) return
+      const el = e.target as HTMLElement
+      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement || el.isContentEditable) return
+      if (anyModalOpen) return
 
       switch (e.key.toLowerCase()) {
         case ' ':
@@ -161,7 +164,7 @@ export function App() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [anyModalOpen])
 
   return (
     <div className="relative w-full h-full no-select">
@@ -241,7 +244,12 @@ export function App() {
 
       <ApiKeyWizard
         isOpen={showApiWizard}
-        onClose={() => setShowApiWizard(false)}
+        onClose={() => {
+          setShowApiWizard(false)
+          if (localStorage.getItem('tickler-has-completed-tour') !== 'true') {
+            setShowTour(true)
+          }
+        }}
       />
     </div>
   )
