@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { WELCOME_CONTENT } from '../../constants/helpText'
 
 interface WelcomeModalProps {
@@ -43,17 +43,26 @@ const ICONS: Record<string, () => React.JSX.Element> = {
 }
 
 export function WelcomeModal({ onTrySimulator, onConnectLive }: WelcomeModalProps) {
+  // Escape key dismisses (try simulator path)
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onTrySimulator()
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [onTrySimulator])
+
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center p-4 animate-fadeIn">
+    <div className="fixed inset-0 z-60 flex items-center justify-center p-4 animate-fadeIn" role="dialog" aria-modal="true" aria-labelledby="welcome-headline">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       {/* Card */}
       <div className="relative w-full max-w-[520px] glass px-6 py-8 sm:px-8 sm:py-10 text-center animate-fadeInUp">
-        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+        <h1 id="welcome-headline" className="text-2xl sm:text-3xl font-bold text-white mb-2">
           {WELCOME_CONTENT.headline}
         </h1>
-        <p className="text-sm text-white/50 mb-8 max-w-md mx-auto">
+        <p className="text-sm text-white/60 mb-8 max-w-md mx-auto">
           {WELCOME_CONTENT.tagline}
         </p>
 
@@ -64,14 +73,14 @@ export function WelcomeModal({ onTrySimulator, onConnectLive }: WelcomeModalProp
             return (
               <div key={step.label} className="flex items-center gap-3 sm:gap-4">
                 <div className="flex flex-col items-center gap-1.5 w-20 sm:w-24">
-                  <div className="text-white/40">
+                  <div className="text-white/50">
                     <Icon />
                   </div>
-                  <span className="text-[11px] font-bold text-white/70">{step.label}</span>
-                  <span className="text-[9px] text-white/30 leading-tight">{step.desc}</span>
+                  <span className="text-[11px] font-bold text-white/80">{step.label}</span>
+                  <span className="text-[9px] text-white/40 leading-tight">{step.desc}</span>
                 </div>
                 {i < WELCOME_CONTENT.steps.length - 1 && (
-                  <span className="text-white/20 text-lg -mt-6">&#8594;</span>
+                  <span className="text-white/30 text-lg -mt-6">&#8594;</span>
                 )}
               </div>
             )
@@ -82,13 +91,14 @@ export function WelcomeModal({ onTrySimulator, onConnectLive }: WelcomeModalProp
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={onTrySimulator}
+            autoFocus
             className="px-6 py-3 rounded-xl bg-white/15 hover:bg-white/25 active:bg-white/30 text-white font-semibold text-sm transition-all cursor-pointer"
           >
             {WELCOME_CONTENT.ctaPrimary}
           </button>
           <button
             onClick={onConnectLive}
-            className="px-6 py-3 rounded-xl border border-white/15 hover:border-white/30 text-white/60 hover:text-white/90 text-sm transition-all cursor-pointer"
+            className="px-6 py-3 rounded-xl border border-white/15 hover:border-white/30 text-white/70 hover:text-white/90 text-sm transition-all cursor-pointer"
           >
             {WELCOME_CONTENT.ctaSecondary}
           </button>

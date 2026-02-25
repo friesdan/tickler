@@ -5,13 +5,26 @@ import { AVAILABLE_TICKERS } from '../../services/stockSimulator'
 import { searchTickers } from '../../services/tickerSearch'
 import type { TickerSearchResult, ConnectionStatus } from '../../types'
 
+const STATUS_LABELS: Record<ConnectionStatus, string> = {
+  connected: 'Connected',
+  connecting: 'Connecting',
+  reconnecting: 'Reconnecting',
+  error: 'Error',
+  disconnected: 'Offline',
+}
+
 function StatusDot({ status }: { status: ConnectionStatus }) {
   const cls =
     status === 'connected' ? 'bg-emerald-400' :
     status === 'connecting' || status === 'reconnecting' ? 'bg-yellow-400 animate-pulse' :
     status === 'error' ? 'bg-red-400' :
     'bg-white/20'
-  return <span className={`inline-block w-1.5 h-1.5 rounded-full ${cls} flex-shrink-0`} />
+  return (
+    <span className="flex items-center gap-1.5 flex-shrink-0" aria-live="polite">
+      <span className={`inline-block w-1.5 h-1.5 rounded-full ${cls}`} />
+      <span className="text-[9px] text-white/30 uppercase tracking-wider hidden sm:inline">{STATUS_LABELS[status]}</span>
+    </span>
+  )
 }
 
 export function TickerSelector({ onOpenConfig, onGoLive }: { onOpenConfig?: () => void; onGoLive?: () => void }) {
@@ -152,7 +165,7 @@ export function TickerSelector({ onOpenConfig, onGoLive }: { onOpenConfig?: () =
         <div className="flex items-center justify-between gap-2 px-0.5 mb-2">
           <div className="flex items-center gap-2 min-w-0">
             <span className="w-1 h-1 rounded-full bg-yellow-400/60 flex-shrink-0" />
-            <span className="text-[10px] text-white/35 leading-tight truncate">
+            <span className="text-[10px] text-white/50 leading-tight truncate">
               Simulated data
             </span>
           </div>

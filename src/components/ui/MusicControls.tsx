@@ -44,6 +44,7 @@ export function MusicControls() {
           value={volume}
           onChange={(e) => setVolume(parseFloat(e.target.value))}
           className="slider w-16 sm:w-20"
+          aria-label="Volume"
         />
       </div>
 
@@ -56,6 +57,7 @@ export function MusicControls() {
           <button
             key={mode}
             onClick={() => setAudioMode(mode)}
+            aria-pressed={audioMode === mode}
             className={`px-2.5 py-1 text-[10px] uppercase tracking-wider cursor-pointer transition-all ${
               audioMode === mode
                 ? 'bg-white/[0.12] text-white/70'

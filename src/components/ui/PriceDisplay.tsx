@@ -23,17 +23,23 @@ export function PriceDisplay() {
     })
     .join(' ')
 
+  const hasData = history.length > 0
+
   return (
     <div data-tour-id="price-display" className="glass px-3 sm:px-4 py-2.5 sm:py-3">
       <div className="text-white/50 text-[10px] sm:text-xs mb-1">{symbol}</div>
-      <div className="flex items-baseline gap-2 sm:gap-3">
-        <span className="text-xl sm:text-2xl font-bold tabular-nums">
-          ${price.toFixed(2)}
-        </span>
-        <span className={`text-xs sm:text-sm font-semibold ${color}`}>
-          {isUp ? '+' : ''}{change.toFixed(2)} ({isUp ? '+' : ''}{changePercent.toFixed(2)}%)
-        </span>
-      </div>
+      {!hasData ? (
+        <div className="text-white/25 text-xs py-1">Waiting for data...</div>
+      ) : (
+        <div className="flex items-baseline gap-2 sm:gap-3">
+          <span className="text-xl sm:text-2xl font-bold tabular-nums">
+            ${price.toFixed(2)}
+          </span>
+          <span className={`text-xs sm:text-sm font-semibold ${color}`}>
+            {isUp ? '+' : ''}{change.toFixed(2)} ({isUp ? '+' : ''}{changePercent.toFixed(2)}%)
+          </span>
+        </div>
+      )}
       {sparkline.length > 2 && (
         <svg width="120" height="24" className="mt-1.5 sm:mt-2 opacity-60">
           <polyline

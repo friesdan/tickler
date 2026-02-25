@@ -203,3 +203,33 @@ body {
 .animate-fadeInUp   { animation: fadeInUp 0.35s ease-out both; }
 .animate-fadeIn     { animation: fadeIn 0.25s ease-out both; }
 .animate-spotlightPulse { animation: spotlightPulse 2s ease-in-out infinite; }
+
+/* ------------------------------------------------------------ */
+/* Focus visibility                                              */
+/* ------------------------------------------------------------ */
+
+*:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.4);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+input:focus-visible,
+select:focus-visible {
+  outline-offset: 0;
+}
+
+/* ------------------------------------------------------------ */
+/* Reduced motion                                                */
+/* ------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fadeInUp,
+  .animate-fadeIn,
+  .animate-spotlightPulse {
+    animation: none !important;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}

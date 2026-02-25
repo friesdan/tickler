@@ -39,7 +39,7 @@ export function ParameterDisplay() {
     <div data-tour-id="parameter-display" className="space-y-2 min-w-[180px]">
       {/* Music Parameters */}
       <div className="glass px-4 py-3 text-xs space-y-1.5">
-        <div className="text-white/30 font-bold uppercase tracking-wider mb-2">
+        <div className="text-white/40 font-bold uppercase tracking-wider mb-2">
           Parameters
         </div>
         <Row label="Mood" value={params.mood} className={moodColor} tooltip={PARAMETER_HELP.Mood} />
@@ -69,7 +69,7 @@ export function ParameterDisplay() {
 
       {/* Indicator → Music Mappings */}
       <div className="glass px-4 py-3 text-xs space-y-1.5">
-        <div className="text-white/30 font-bold uppercase tracking-wider mb-2">
+        <div className="text-white/40 font-bold uppercase tracking-wider mb-2">
           Indicators
         </div>
         <Indicator
@@ -122,7 +122,7 @@ export function ParameterDisplay() {
 function Row({ label, value, className = 'text-white/70', tooltip }: { label: string; value: string; className?: string; tooltip?: string }) {
   return (
     <div className="flex justify-between items-center">
-      <span className="text-white/40 flex items-center">
+      <span className="text-white/50 flex items-center">
         {label}
         {tooltip && <InfoTooltip text={tooltip} />}
       </span>
@@ -135,7 +135,7 @@ function Bar({ label, value, tooltip }: { label: string; value: number; tooltip?
   return (
     <div>
       <div className="flex justify-between mb-0.5 items-center">
-        <span className="text-white/40 flex items-center">
+        <span className="text-white/50 flex items-center">
           {label}
           {tooltip && <InfoTooltip text={tooltip} />}
         </span>
@@ -154,7 +154,7 @@ function Bar({ label, value, tooltip }: { label: string; value: number; tooltip?
 function Indicator({ label, value, desc, color, tooltip }: { label: string; value: string; desc: string; color: string; tooltip?: string }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-white/40 shrink-0 flex items-center">
+      <span className="text-white/50 shrink-0 flex items-center">
         {label}
         {tooltip && <InfoTooltip text={tooltip} />}
       </span>
