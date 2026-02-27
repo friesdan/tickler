@@ -39,7 +39,7 @@ export function ParameterDisplay() {
     <div data-tour-id="parameter-display" className="space-y-2 min-w-[200px]">
       {/* Music Parameters */}
       <div className="glass px-4 py-3 text-xs space-y-1.5">
-        <div className="text-white/55 font-bold uppercase tracking-wider mb-2">
+        <div className="text-emerald-300/60 font-bold uppercase tracking-wider mb-2">
           Parameters
         </div>
         <Row label="Mood" value={params.mood} className={moodColor} tooltip={PARAMETER_HELP.Mood} />
@@ -69,7 +69,7 @@ export function ParameterDisplay() {
 
       {/* Indicator → Music Mappings */}
       <div className="glass px-4 py-3 text-xs space-y-1.5">
-        <div className="text-white/55 font-bold uppercase tracking-wider mb-2">
+        <div className="text-emerald-300/60 font-bold uppercase tracking-wider mb-2">
           Indicators
         </div>
         <Indicator
@@ -143,7 +143,7 @@ function Bar({ label, value, tooltip }: { label: string; value: number; tooltip?
       </div>
       <div className="h-1 bg-white/[0.12] rounded-full overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-emerald-400/60 to-emerald-400/30 rounded-full transition-all duration-300"
+          className="h-full bg-gradient-to-r from-emerald-400/80 to-emerald-400/40 rounded-full transition-all duration-300 shadow-[0_0_4px_rgba(52,211,153,0.3)]"
           style={{ width: `${value * 100}%` }}
         />
       </div>

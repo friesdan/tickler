@@ -187,7 +187,7 @@ export function App() {
           <button
             data-tour-id="settings-button"
             onClick={() => setSettingsOpen(true)}
-            className="glass px-3 py-2 sm:py-1.5 text-white/50 hover:text-white/80 active:text-white/90 text-xs cursor-pointer transition-colors min-w-[44px] min-h-[44px] sm:min-h-0 flex items-center justify-center"
+            className="glass px-3 py-2 sm:py-1.5 text-emerald-300/70 hover:text-emerald-300 active:text-emerald-200 border border-emerald-400/15 hover:border-emerald-400/30 text-xs cursor-pointer transition-all min-w-[44px] min-h-[44px] sm:min-h-0 flex items-center justify-center"
             aria-label="Open settings"
           >
             <span className="hidden sm:inline">Settings [S]</span>

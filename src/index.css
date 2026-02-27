@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --glass-bg: rgba(10, 10, 30, 0.55);
-  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-bg: rgba(10, 10, 30, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.18);
   --accent: #34d399;
   --green: #00ff88;
   --red: #ff3366;
@@ -52,13 +52,13 @@ body {
   border-radius: 50%;
   background: var(--accent);
   border: 2px solid rgba(52, 211, 153, 0.3);
-  box-shadow: 0 0 8px rgba(52, 211, 153, 0.25);
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.4);
   transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
 }
 
 .slider::-webkit-slider-thumb:hover {
   background: #6ee7b7;
-  box-shadow: 0 0 12px rgba(52, 211, 153, 0.4);
+  box-shadow: 0 0 16px rgba(52, 211, 153, 0.6);
   transform: scale(1.15);
 }
 
@@ -68,7 +68,7 @@ body {
   border-radius: 50%;
   background: var(--accent);
   border: 2px solid rgba(52, 211, 153, 0.3);
-  box-shadow: 0 0 8px rgba(52, 211, 153, 0.25);
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.4);
   cursor: pointer;
 }
 
