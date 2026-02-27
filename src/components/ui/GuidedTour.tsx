@@ -129,7 +129,7 @@ export function GuidedTour({ onComplete }: GuidedTourProps) {
             <button
               onClick={next}
               autoFocus
-              className="px-4 py-1.5 text-[11px] rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-semibold cursor-pointer transition-all"
+              className="px-4 py-1.5 text-[11px] rounded-lg bg-emerald-500/25 hover:bg-emerald-500/40 text-emerald-300 border border-emerald-400/25 font-semibold cursor-pointer transition-all shadow-[0_0_8px_rgba(52,211,153,0.15)]"
             >
               {isLast ? 'Done' : 'Next'}
             </button>

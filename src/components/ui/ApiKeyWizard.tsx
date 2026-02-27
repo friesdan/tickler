@@ -145,8 +145,8 @@ export function ApiKeyWizard({ isOpen, onClose, initialProvider }: ApiKeyWizardP
                   onClick={() => { setSelectedProvider(p.id); setWizardStep(1) }}
                   className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all cursor-pointer ${
                     selectedProvider === p.id
-                      ? 'border-white/25 bg-white/[0.08]'
-                      : 'border-white/[0.10] hover:border-white/15 bg-white/[0.05]'
+                      ? 'border-emerald-400/30 bg-emerald-500/[0.08] ring-1 ring-emerald-400/20'
+                      : 'border-white/[0.12] hover:border-white/20 bg-white/[0.05]'
                   }`}
                 >
                   <span className="text-sm font-semibold text-white/80">{p.name}</span>
@@ -176,7 +176,7 @@ export function ApiKeyWizard({ isOpen, onClose, initialProvider }: ApiKeyWizardP
             </a>
             <button
               onClick={() => setWizardStep(2)}
-              className="w-full px-4 py-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-semibold text-sm transition-all cursor-pointer"
+              className="w-full px-4 py-3 rounded-xl bg-emerald-500/25 hover:bg-emerald-500/40 text-emerald-300 border border-emerald-400/25 font-semibold text-sm transition-all cursor-pointer shadow-[0_0_8px_rgba(52,211,153,0.15)]"
             >
               I have my key
             </button>
@@ -202,14 +202,14 @@ export function ApiKeyWizard({ isOpen, onClose, initialProvider }: ApiKeyWizardP
             <button
               onClick={testConnection}
               disabled={!keyInput.trim() || testStatus === 'testing'}
-              className="w-full px-4 py-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 disabled:opacity-30 disabled:cursor-not-allowed text-emerald-300 font-semibold text-sm transition-all cursor-pointer"
+              className="w-full px-4 py-3 rounded-xl bg-emerald-500/25 hover:bg-emerald-500/40 disabled:opacity-30 disabled:cursor-not-allowed text-emerald-300 border border-emerald-400/25 font-semibold text-sm transition-all cursor-pointer shadow-[0_0_8px_rgba(52,211,153,0.15)]"
             >
               {testStatus === 'testing' ? 'Testing...' : 'Test Connection'}
             </button>
             {testStatus === 'success' && (
               <button
                 onClick={() => setWizardStep(3)}
-                className="w-full mt-3 px-4 py-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-semibold text-sm transition-all cursor-pointer"
+                className="w-full mt-3 px-4 py-3 rounded-xl bg-emerald-500/25 hover:bg-emerald-500/40 text-emerald-300 border border-emerald-400/25 font-semibold text-sm transition-all cursor-pointer shadow-[0_0_8px_rgba(52,211,153,0.15)]"
               >
                 Connected! Continue &#8594;
               </button>
@@ -227,7 +227,7 @@ export function ApiKeyWizard({ isOpen, onClose, initialProvider }: ApiKeyWizardP
             </p>
             <button
               onClick={onClose}
-              className="px-6 py-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-semibold text-sm transition-all cursor-pointer"
+              className="px-6 py-3 rounded-xl bg-emerald-500/25 hover:bg-emerald-500/40 text-emerald-300 border border-emerald-400/25 font-semibold text-sm transition-all cursor-pointer shadow-[0_0_12px_rgba(52,211,153,0.2)]"
             >
               Start Exploring
             </button>
@@ -238,7 +238,7 @@ export function ApiKeyWizard({ isOpen, onClose, initialProvider }: ApiKeyWizardP
         {wizardStep > 0 && wizardStep < 3 && (
           <button
             onClick={() => setWizardStep((s) => s - 1)}
-            className="mt-4 text-xs text-white/40 hover:text-white/60 cursor-pointer transition-colors"
+            className="mt-4 text-xs text-white/45 hover:text-white/70 cursor-pointer transition-colors"
           >
             &#8592; Back
           </button>

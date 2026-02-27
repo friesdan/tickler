@@ -173,7 +173,7 @@ export function TickerSelector({ onOpenConfig, onGoLive }: { onOpenConfig?: () =
             {onGoLive ? (
               <button
                 onClick={onGoLive}
-                className="text-[10px] bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 px-3 py-1.5 rounded-full min-h-[36px] sm:min-h-0 cursor-pointer transition-all font-semibold"
+                className="text-[10px] bg-emerald-500/25 text-emerald-300 hover:bg-emerald-500/40 border border-emerald-400/30 hover:border-emerald-400/50 px-3 py-1.5 rounded-full min-h-[36px] sm:min-h-0 cursor-pointer transition-all font-semibold shadow-[0_0_8px_rgba(52,211,153,0.15)]"
               >
                 Go Live
               </button>
@@ -204,7 +204,7 @@ export function TickerSelector({ onOpenConfig, onGoLive }: { onOpenConfig?: () =
               onClick={() => setSymbol(t)}
               className={`px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-lg text-xs font-bold transition-all cursor-pointer min-h-[36px] sm:min-h-0 flex items-center ${
                 t === symbol
-                  ? 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-400/20'
+                  ? 'bg-emerald-500/25 text-emerald-300 ring-2 ring-emerald-400/30 shadow-[0_0_8px_rgba(52,211,153,0.15)]'
                   : 'text-white/40 hover:text-white/80 hover:bg-white/[0.06] active:text-white/90'
               }`}
             >

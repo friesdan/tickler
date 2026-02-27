@@ -19,7 +19,7 @@ export function MusicControls() {
     <div data-tour-id="music-controls" className="glass px-4 sm:px-6 py-3 flex items-center gap-3 sm:gap-6 w-full sm:w-auto justify-center">
       <button
         onClick={() => setIsPlaying(!isPlaying)}
-        className="w-12 h-12 sm:w-10 sm:h-10 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 active:scale-[0.97] text-emerald-300 flex items-center justify-center transition-all cursor-pointer flex-shrink-0"
+        className="w-12 h-12 sm:w-10 sm:h-10 rounded-full bg-emerald-500/25 hover:bg-emerald-500/40 active:scale-[0.97] text-emerald-300 border border-emerald-400/30 shadow-[0_0_12px_rgba(52,211,153,0.2)] hover:shadow-[0_0_20px_rgba(52,211,153,0.35)] flex items-center justify-center transition-all cursor-pointer flex-shrink-0"
         aria-label={isPlaying ? 'Pause' : 'Play'}
       >
         {isPlaying ? (

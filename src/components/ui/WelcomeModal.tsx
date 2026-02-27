@@ -92,13 +92,13 @@ export function WelcomeModal({ onTrySimulator, onConnectLive }: WelcomeModalProp
           <button
             onClick={onTrySimulator}
             autoFocus
-            className="px-6 py-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-400/20 active:scale-[0.97] font-semibold text-sm transition-all cursor-pointer"
+            className="px-6 py-3 rounded-xl bg-emerald-500/25 hover:bg-emerald-500/40 text-emerald-300 border border-emerald-400/30 hover:border-emerald-400/50 active:scale-[0.97] font-semibold text-sm transition-all cursor-pointer shadow-[0_0_12px_rgba(52,211,153,0.2)] hover:shadow-[0_0_20px_rgba(52,211,153,0.35)]"
           >
             {WELCOME_CONTENT.ctaPrimary}
           </button>
           <button
             onClick={onConnectLive}
-            className="px-6 py-3 rounded-xl border border-white/20 hover:border-white/30 text-white/80 hover:text-white/90 text-sm transition-all cursor-pointer"
+            className="px-6 py-3 rounded-xl border border-white/25 hover:border-white/40 text-white/80 hover:text-white active:scale-[0.97] text-sm transition-all cursor-pointer"
           >
             {WELCOME_CONTENT.ctaSecondary}
           </button>
