@@ -60,8 +60,11 @@ export function PostProcessing() {
     const isPlaying = useMusicStore.getState().isPlaying
 
     if (bloomRef.current) {
-      const bass = isPlaying ? audioData.bass : 0.3
-      const target = 0.8 + bass * 2.0 + stock.volatility * 1.5
+      // When paused, dim bloom to low ambient level
+      const bass = isPlaying ? audioData.bass : 0.05
+      const target = isPlaying
+        ? 0.8 + bass * 2.0 + stock.volatility * 1.5
+        : 0.6
       bloomRef.current.intensity += (target - bloomRef.current.intensity) * 0.1
     }
 
