@@ -4,6 +4,12 @@ import * as THREE from 'three'
 import { useMusicStore } from '../../stores/musicStore'
 import { useStockStore } from '../../stores/stockStore'
 
+// Idle values when paused — subtle ambient presence
+const IDLE_BASS = 0.05
+const IDLE_MID = 0.03
+const IDLE_TREBLE = 0.02
+const IDLE_RMS = 0.05
+
 const PARTICLE_COUNT = 8000
 
 // Encode size, phase, and velocity into extra attributes via color and uv
@@ -122,6 +128,7 @@ void main() {
 export function ParticleField() {
   const pointsRef = useRef<THREE.Points>(null!)
   const matRef = useRef<THREE.ShaderMaterial>(null!)
+  const frozenTimeRef = useRef(0)
 
   // Build geometry with position, color (phase+size), and normal (velocity)
   const { positions, colors, normals } = useMemo(() => {
@@ -159,21 +166,18 @@ export function ParticleField() {
     const audioData = useMusicStore.getState().audioData
     const params = useMusicStore.getState().parameters
     const stock = useStockStore.getState()
-    const t = state.clock.elapsedTime
+    const isPlaying = useMusicStore.getState().isPlaying
     const u = mat.uniforms
 
-    u.uTime.value = t
+    // Freeze shader time when paused
+    if (isPlaying) frozenTimeRef.current = state.clock.elapsedTime
+    u.uTime.value = frozenTimeRef.current
 
-    const isPlaying = useMusicStore.getState().isPlaying
-    const mockBass = 0.3 + Math.sin(t * 2) * 0.15 + Math.sin(t * 0.7) * 0.1
-    const mockMid = 0.25 + Math.sin(t * 3.1) * 0.12
-    const mockTreble = 0.2 + Math.sin(t * 5.3) * 0.1
-    const mockRms = 0.3 + Math.sin(t * 1.5) * 0.1
-
-    const bass = isPlaying ? audioData.bass : mockBass
-    const mid = isPlaying ? audioData.mid : mockMid
-    const treble = isPlaying ? audioData.treble : mockTreble
-    const rms = isPlaying ? audioData.rms : mockRms
+    // When paused, lerp audio toward idle minimums instead of mock animation
+    const bass = isPlaying ? audioData.bass : IDLE_BASS
+    const mid = isPlaying ? audioData.mid : IDLE_MID
+    const treble = isPlaying ? audioData.treble : IDLE_TREBLE
+    const rms = isPlaying ? audioData.rms : IDLE_RMS
 
     u.uBass.value += (bass - u.uBass.value) * 0.1
     u.uMid.value += (mid - u.uMid.value) * 0.1
@@ -191,7 +195,9 @@ export function ParticleField() {
     const targetMood = moodMap[params.mood] ?? 0
     u.uMood.value += (targetMood - u.uMood.value) * 0.05
 
-    if (pointsRef.current) {
+    // Only rotate particles when playing
+    if (pointsRef.current && isPlaying) {
+      const t = frozenTimeRef.current
       pointsRef.current.rotation.y = t * 0.05
       pointsRef.current.rotation.x = Math.sin(t * 0.03) * 0.1
     }

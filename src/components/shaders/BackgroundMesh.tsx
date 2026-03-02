@@ -136,6 +136,7 @@ void main() {
 
 export function BackgroundMesh() {
   const ref = useRef<THREE.ShaderMaterial>(null!)
+  const frozenTimeRef = useRef(0)
   const { size } = useThree()
 
   useFrame((state) => {
@@ -144,9 +145,12 @@ export function BackgroundMesh() {
     const audioData = useMusicStore.getState().audioData
     const params = useMusicStore.getState().parameters
     const stock = useStockStore.getState()
-    const t = state.clock.elapsedTime
+    const isPlaying = useMusicStore.getState().isPlaying
 
-    mat.uniforms.uTime.value = t
+    // Freeze shader time when paused
+    if (isPlaying) frozenTimeRef.current = state.clock.elapsedTime
+    mat.uniforms.uTime.value = frozenTimeRef.current
+
     mat.uniforms.uResolution.value.set(size.width, size.height)
 
     // Sentiment from short-term momentum (oscillates frequently, not cumulative drift)
@@ -166,8 +170,8 @@ export function BackgroundMesh() {
     mat.uniforms.uRSI.value += (rsiNorm - mat.uniforms.uRSI.value) * 0.06
     mat.uniforms.uADX.value += (adxNorm - mat.uniforms.uADX.value) * 0.06
 
-    const isPlaying = useMusicStore.getState().isPlaying
-    const bass = isPlaying ? audioData.bass : (0.3 + Math.sin(t * 2) * 0.15)
+    // When paused, fade bass to near-zero
+    const bass = isPlaying ? audioData.bass : 0.05
     mat.uniforms.uBass.value += (bass - mat.uniforms.uBass.value) * 0.08
   })
 
